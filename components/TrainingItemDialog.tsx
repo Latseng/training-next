@@ -6,10 +6,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "./ui/button";
+import { Dispatch, SetStateAction } from "react";
+import { Exercise } from "@/lib/types";
 
 interface TainingItemDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
+  setExercises: Dispatch<SetStateAction<Exercise[]>>;
   program: "strength" | "power" | "endurance" | "other";
 }
 
@@ -48,9 +51,16 @@ const power = [
 const TrainingItemDialog = ({
   isOpen,
   setIsOpen,
+  setExercises,
   program,
 }: TainingItemDialogProps) => {
   const dialogTitle = programMap[program];
+
+  const handleCreateTrainingProgram = (exercise: Exercise) => {
+    setIsOpen(false)
+    console.log(exercise);
+    setExercises(prev => [...prev, exercise]);
+  }
 
   return (
     <Dialog
@@ -70,7 +80,17 @@ const TrainingItemDialog = ({
               <p className="m-2">下肢</p>
               <div className="m-2 flex flex-wrap gap-4">
                 {strength.upper.map((item, index) => (
-                  <Button key={index} onClick={() => console.log(item)}>
+                  <Button
+                    key={index}
+                    onClick={() =>
+                      handleCreateTrainingProgram({
+                        name: item,
+                        weight: 0,
+                        sets: 0,
+                        reps: 0,
+                      })
+                    }
+                  >
                     {item}
                   </Button>
                 ))}
@@ -81,7 +101,17 @@ const TrainingItemDialog = ({
               <p className="m-2">上肢</p>
               <div className="m-2 flex flex-wrap gap-4">
                 {strength.lower.map((item, index) => (
-                  <Button key={index} onClick={() => console.log(item)}>
+                  <Button
+                    key={index}
+                    onClick={() =>
+                      handleCreateTrainingProgram({
+                        name: item,
+                        weight: 0,
+                        sets: 0,
+                        reps: 0,
+                      })
+                    }
+                  >
                     {item}
                   </Button>
                 ))}
@@ -92,7 +122,17 @@ const TrainingItemDialog = ({
         {program === "power" && (
           <div className="flex flex-wrap gap-4">
             {power.map((item, index) => (
-              <Button key={index} onClick={() => console.log(item)}>
+              <Button
+                key={index}
+                onClick={() =>
+                  handleCreateTrainingProgram({
+                    name: item,
+                    weight: 0,
+                    sets: 0,
+                    reps: 0,
+                  })
+                }
+              >
                 {item}
               </Button>
             ))}

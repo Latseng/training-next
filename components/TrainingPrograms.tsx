@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button";
 import { SquarePlus, X } from "lucide-react";
 
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
+import {
   Card,
   CardAction,
   CardContent,
@@ -15,6 +22,7 @@ import {
 
 import { useState } from "react";
 import TrainingItemDialog from "./TrainingItemDialog";
+import { Exercise } from "@/lib/types";
 
 const TrainingPrograms = () => {
   const [programCardOpen, setProgramCardOpen] = useState(false)
@@ -22,6 +30,7 @@ const TrainingPrograms = () => {
   const [tainingProgram, setTrainingProgram] = useState<
     "strength" | "power" | "endurance" | "other"
   >("strength");
+  const [exercises, setExercises] = useState<Exercise[]>([])
 
 const handleTrainingItemDialogOpen = (
   program: "strength" | "power" | "endurance" | "other"
@@ -29,6 +38,10 @@ const handleTrainingItemDialogOpen = (
   setIsTrainingItemDialogOpen(true);
   setTrainingProgram(program);
 };
+const handleDeleteExercise = () => {
+  console.log("刪除");
+  
+}
 
   return (
     <div className="px-4 md:py-4">
@@ -50,10 +63,16 @@ const handleTrainingItemDialogOpen = (
             <Button onClick={() => handleTrainingItemDialogOpen("power")}>
               爆發力 Power
             </Button>
-            <Button disabled onClick={() => handleTrainingItemDialogOpen("endurance")}>
+            <Button
+              disabled
+              onClick={() => handleTrainingItemDialogOpen("endurance")}
+            >
               耐力 Endurance
             </Button>
-            <Button disabled onClick={() => handleTrainingItemDialogOpen("other")}>
+            <Button
+              disabled
+              onClick={() => handleTrainingItemDialogOpen("other")}
+            >
               其他
             </Button>
           </CardContent>
@@ -79,8 +98,30 @@ const handleTrainingItemDialogOpen = (
       <TrainingItemDialog
         isOpen={isTrainingItemDialogOpen}
         setIsOpen={setIsTrainingItemDialogOpen}
+        setExercises={setExercises}
         program={tainingProgram}
       />
+      <Accordion type="multiple">
+        <AccordionItem value="item-1">
+          <AccordionTrigger>範例</AccordionTrigger>
+          <AccordionContent>
+            Yes. It adheres to the WAI-ARIA design pattern.
+          </AccordionContent>
+        </AccordionItem>
+        {exercises.map((exercise, index) => (
+          <AccordionItem key={index} value={exercise.name}>
+            <AccordionTrigger>
+              <span>{exercise.name}</span>
+
+              <Button onClick={handleDeleteExercise}>x</Button>
+            </AccordionTrigger>
+
+            <AccordionContent>
+              Yes. It adheres to the WAI-ARIA design pattern.
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
     </div>
   );
 };
