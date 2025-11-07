@@ -1,24 +1,84 @@
-import { cn } from "@/lib/utils";
+"use client"
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { LoaderCircle } from "lucide-react";
 
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+const formSchema = z.object({
+  email: z.email({
+    message: "請輸入有效的 Email 地址。",
+  }),
+  password: z
+    .string({
+      message: "請輸入密碼",
+    }),
+});
+
+export function LoginForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+  
+   const form = useForm<z.infer<typeof formSchema>>({
+      resolver: zodResolver(formSchema),
+      defaultValues: {
+        email: "",
+        password: "",
+      },
+    });
+
+     async function onSubmit(data: z.infer<typeof formSchema>) {
+        setIsSubmitting(true);
+        const formData = {
+          email: data.email,
+          password: data.password,
+        };
+        
+        try {
+          const res = await fetch("http://localhost:8000/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(formData),
+          });
+    
+          const data = await res.json();
+          
+          if (data.access_token) {
+            localStorage.setItem("token", data.access_token);
+            toast.success("登入成功！");
+            router.push("/");
+          } else {
+            if (data.detail === "Invalid login credentials") {
+              setError("帳號或密碼錯誤");
+            }
+          }
+        } catch (err: unknown) {
+          console.error(err);
+          setError("發生預期外錯誤，請稍後再試");
+        } finally {
+          setIsSubmitting(false);
+        }
+      }
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className="flex flex-col gap-6">
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8">
+          <form className="p-6 md:p-8" onSubmit={form.handleSubmit(onSubmit)}>
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">登入</h1>
@@ -26,29 +86,54 @@ export function LoginForm({
                   記錄您的訓練歷程
                 </p>
               </div>
+              <Controller
+                name="email"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="email">Email</FieldLabel>
+                    <Input
+                      {...field}
+                      id="email"
+                      aria-invalid={fieldState.invalid}
+                      type="email"
+                      placeholder="m@example.com"
+                      required
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+              <Controller
+                name="password"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="password">密碼</FieldLabel>
+                    <Input
+                      {...field}
+                      id="password"
+                      aria-invalid={fieldState.invalid}
+                      type="password"
+                      required
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                    {error && <p className="text-red-500 text-sm">{error}</p>}
+                  </Field>
+                )}
+              />
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                />
-              </Field>
-              <Field>
-                <div className="flex items-center">
-                  <FieldLabel htmlFor="password">密碼</FieldLabel>
-                  <a
-                    href="#"
-                    className="ml-auto text-sm underline-offset-2 hover:underline"
-                  >
-                    忘記密碼
-                  </a>
-                </div>
-                <Input id="password" type="password" required />
-              </Field>
-              <Field>
-                <Button type="submit">登入</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <LoaderCircle className="animate-spin" />
+                  ) : (
+                    "登入"
+                  )}
+                </Button>
               </Field>
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 或使用以下方式登入
@@ -65,7 +150,7 @@ export function LoginForm({
                 </Button>
               </Field>
               <FieldDescription className="text-center">
-                沒有帳號嗎？ <a href="/signup">快速註冊</a> 保存您的訓練歷程
+                沒有帳號嗎？ <a href="/signup">註冊</a> 以保存您的訓練歷程
               </FieldDescription>
             </FieldGroup>
           </form>

@@ -1,6 +1,5 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -30,7 +29,7 @@ const formSchema = z
       .max(30, {
         message: "使用者名稱不能超過 30 個字元。",
       }),
-    email: z.string().email({
+    email: z.email({
       message: "請輸入有效的 Email 地址。",
     }),
     password: z.string().min(8, {
@@ -39,18 +38,15 @@ const formSchema = z
     confirmPassword: z.string().min(8, {
       message: "輸入與密碼不相符",
     }),
-    // 2. 使用 refine 實現密碼比對驗證
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "密碼與確認密碼不相符。",
     path: ["confirmPassword"], // 驗證錯誤會顯示在 '確認密碼' 欄位
   });
 
-export function SignupForm({
-  className,
-  ...props
-}: React.ComponentProps<"div">) {
+export function SignupForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -61,7 +57,6 @@ export function SignupForm({
       confirmPassword: "",
     },
   });
-  const router = useRouter();
 
   async function onSubmit(data: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
@@ -82,17 +77,18 @@ export function SignupForm({
       if (!res.ok) {
         throw new Error(data.detail || "註冊失敗");
       } else {
-        toast.success("登入成功！");
+        toast.success("註冊成功！請先至Email收確認信！");
         router.push("/login");
       }
     } catch (err: unknown) {
       console.error(err);
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   }
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className="flex flex-col gap-6">
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
           <form className="p-6 md:p-8" onSubmit={form.handleSubmit(onSubmit)}>
