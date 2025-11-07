@@ -1,24 +1,101 @@
+"use client";
+
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Field,
   FieldDescription,
+  FieldError,
   FieldGroup,
   FieldLabel,
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
+import * as z from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { LoaderCircle } from "lucide-react";
+
+const formSchema = z
+  .object({
+    username: z
+      .string()
+      .min(2, {
+        message: "使用者名稱至少需要 2 個字元。",
+      })
+      .max(30, {
+        message: "使用者名稱不能超過 30 個字元。",
+      }),
+    email: z.string().email({
+      message: "請輸入有效的 Email 地址。",
+    }),
+    password: z.string().min(8, {
+      message: "密碼至少需要 8 個字元。",
+    }),
+    confirmPassword: z.string().min(8, {
+      message: "輸入與密碼不相符",
+    }),
+    // 2. 使用 refine 實現密碼比對驗證
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "密碼與確認密碼不相符。",
+    path: ["confirmPassword"], // 驗證錯誤會顯示在 '確認密碼' 欄位
+  });
 
 export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+  const router = useRouter();
+
+  async function onSubmit(data: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
+    const formData = {
+      username: data.username,
+      email: data.email,
+      password: data.password,
+    };
+    try {
+      const res = await fetch("http://localhost:8000/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.detail || "註冊失敗");
+      } else {
+        toast.success("登入成功！");
+        router.push("/login");
+      }
+    } catch (err: unknown) {
+      console.error(err);
+    }
+    setIsSubmitting(false);
+  }
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0">
         <CardContent className="grid p-0 md:grid-cols-2">
-          <form className="p-6 md:p-8">
+          <form className="p-6 md:p-8" onSubmit={form.handleSubmit(onSubmit)}>
             <FieldGroup>
               <div className="flex flex-col items-center gap-2 text-center">
                 <h1 className="text-2xl font-bold">建立使用者</h1>
@@ -26,38 +103,98 @@ export function SignupForm({
                   請用Email建立帳號
                 </p>
               </div>
-              <Field>
-                <FieldLabel htmlFor="username">使用者名稱（該如何稱呼您？）</FieldLabel>
-                <Input
-                  id="username"
-                  type="text"
-                  placeholder="範例：David"
-                  required
-                />
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  required
-                />
-              </Field>
+              <Controller
+                name="username"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="username">
+                      使用者名稱（該如何稱呼您？）
+                    </FieldLabel>
+                    <Input
+                      {...field}
+                      id="username"
+                      aria-invalid={fieldState.invalid}
+                      type="text"
+                      placeholder="範例：David"
+                      required
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+              <Controller
+                name="email"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldLabel htmlFor="email">Email</FieldLabel>
+                    <Input
+                      {...field}
+                      id="email"
+                      aria-invalid={fieldState.invalid}
+                      type="email"
+                      placeholder="m@example.com"
+                      required
+                    />
+                    {fieldState.invalid && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
               <Field>
                 <Field className="grid grid-cols-2 gap-4">
-                  <Field>
-                    <FieldLabel htmlFor="password">密碼</FieldLabel>
-                    <Input id="password" type="password" required />
-                  </Field>
-                  <Field>
-                    <FieldLabel htmlFor="confirm-password">確認密碼</FieldLabel>
-                    <Input id="confirm-password" type="password" required />
-                  </Field>
+                  <Controller
+                    name="password"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="password">密碼</FieldLabel>
+                        <Input
+                          {...field}
+                          id="password"
+                          aria-invalid={fieldState.invalid}
+                          type="password"
+                          required
+                        />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
+                  <Controller
+                    name="confirmPassword"
+                    control={form.control}
+                    render={({ field, fieldState }) => (
+                      <Field data-invalid={fieldState.invalid}>
+                        <FieldLabel htmlFor="confirmPassword">密碼</FieldLabel>
+                        <Input
+                          {...field}
+                          id="confirmPassword"
+                          aria-invalid={fieldState.invalid}
+                          type="password"
+                          required
+                        />
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
+                      </Field>
+                    )}
+                  />
                 </Field>
               </Field>
               <Field>
-                <Button type="submit">註冊</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <LoaderCircle className="animate-spin" />
+                  ) : (
+                    "註冊"
+                  )}
+                </Button>
               </Field>
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 或使用以下方式註冊
