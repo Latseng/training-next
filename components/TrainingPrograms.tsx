@@ -136,7 +136,7 @@ const TrainingPrograms = () => {
       </div>
       {!trainingActivities.length ? (
         <div className="flex flex-col items-center">
-          <h3>今天還沒有訓練計劃...</h3>
+          <h3>今天沒有訓練計劃...</h3>
         </div>
       ) : (
         <div>訓練清單</div>

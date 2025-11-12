@@ -9,11 +9,25 @@ import { toast } from "sonner";
 const NavBar = () => {
   const router = useRouter()
 
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    router.push("/login");
-    toast.success("登出成功！");
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/logout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        toast.success("登出成功！");
+        router.push("/");
+        router.push("/login");
+      } else {
+        toast.warning("登出失敗，發生預期外錯誤，請稍後再試");
+      }
+    } catch (err: unknown) {
+      console.error(err);
+      toast.warning("登出失敗，發生預期外錯誤，請稍後再試");
+    }
   };
 
   return (
