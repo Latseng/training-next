@@ -6,13 +6,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "./ui/button";
-import { Dispatch, SetStateAction } from "react";
-import { Exercise } from "@/lib/types";
 
 interface TainingItemDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
-  setExercises: Dispatch<SetStateAction<Exercise[]>>;
+  setExerciseSetting: (exercise: string) => void
   program: "strength" | "power" | "endurance" | "other";
 }
 
@@ -51,15 +49,15 @@ const power = [
 const TrainingItemDialog = ({
   isOpen,
   setIsOpen,
-  setExercises,
+  setExerciseSetting,
   program,
 }: TainingItemDialogProps) => {
   const dialogTitle = programMap[program];
 
-  const handleCreateTrainingProgram = (exercise: Exercise) => {
+  const handleCreateTrainingProgram = (exercise: string) => {
     setIsOpen(false)
-    console.log(exercise);
-    setExercises(prev => [...prev, exercise]);
+    setExerciseSetting(exercise);
+    // setExercises(prev => [...prev, exercise]);
   }
 
   return (
@@ -83,12 +81,7 @@ const TrainingItemDialog = ({
                   <Button
                     key={index}
                     onClick={() =>
-                      handleCreateTrainingProgram({
-                        name: item,
-                        weight: 0,
-                        sets: 0,
-                        reps: 0,
-                      })
+                      handleCreateTrainingProgram(item)
                     }
                   >
                     {item}
@@ -104,12 +97,7 @@ const TrainingItemDialog = ({
                   <Button
                     key={index}
                     onClick={() =>
-                      handleCreateTrainingProgram({
-                        name: item,
-                        weight: 0,
-                        sets: 0,
-                        reps: 0,
-                      })
+                      handleCreateTrainingProgram(item)
                     }
                   >
                     {item}
@@ -125,12 +113,7 @@ const TrainingItemDialog = ({
               <Button
                 key={index}
                 onClick={() =>
-                  handleCreateTrainingProgram({
-                    name: item,
-                    weight: 0,
-                    sets: 0,
-                    reps: 0,
-                  })
+                  handleCreateTrainingProgram(item)
                 }
               >
                 {item}

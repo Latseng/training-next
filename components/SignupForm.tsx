@@ -17,7 +17,7 @@ import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { LoaderCircle } from "lucide-react";
+import SubmitButton from "./SubmitButton";
 
 const formSchema = z
   .object({
@@ -184,13 +184,7 @@ export function SignupForm() {
                 </Field>
               </Field>
               <Field>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <LoaderCircle className="animate-spin" />
-                  ) : (
-                    "註冊"
-                  )}
-                </Button>
+                <SubmitButton actionName="註冊" isSubmitting={isSubmitting} />
               </Field>
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 或使用以下方式註冊

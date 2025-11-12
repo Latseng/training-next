@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,63 +17,62 @@ import * as z from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { LoaderCircle } from "lucide-react";
+import SubmitButton from "./SubmitButton";
 
 const formSchema = z.object({
   email: z.email({
     message: "請輸入有效的 Email 地址。",
   }),
-  password: z
-    .string({
-      message: "請輸入密碼",
-    }),
+  password: z.string({
+    message: "請輸入密碼",
+  }),
 });
 
 export function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
-  
-   const form = useForm<z.infer<typeof formSchema>>({
-      resolver: zodResolver(formSchema),
-      defaultValues: {
-        email: "",
-        password: "",
-      },
-    });
 
-     async function onSubmit(data: z.infer<typeof formSchema>) {
-        setIsSubmitting(true);
-        const formData = {
-          email: data.email,
-          password: data.password,
-        };
-        
-        try {
-          const res = await fetch("http://localhost:8000/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(formData),
-          });
-    
-          const data = await res.json();
-          
-          if (data.access_token) {
-            localStorage.setItem("token", data.access_token);
-            toast.success("登入成功！");
-            router.push("/");
-          } else {
-            if (data.detail === "Invalid login credentials") {
-              setError("帳號或密碼錯誤");
-            }
-          }
-        } catch (err: unknown) {
-          console.error(err);
-          setError("發生預期外錯誤，請稍後再試");
-        } finally {
-          setIsSubmitting(false);
-        }
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  async function onSubmit(data: z.infer<typeof formSchema>) {
+    setIsSubmitting(true);
+    setError("");
+    const formData = {
+      email: data.email,
+      password: data.password,
+    };
+
+    try {
+      const res = await fetch("http://localhost:8000/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        localStorage.setItem("access_token", data.access_token);
+        localStorage.setItem("refresh_token", data.refresh_token);
+        toast.success("登入成功！");
+        router.push("/");
+      } else {
+        setError(data.detail);
       }
+    } catch (err: unknown) {
+      console.error(err);
+      setError("發生預期外錯誤，請稍後再試");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
   return (
     <div className="flex flex-col gap-6">
       <Card className="overflow-hidden p-0">
@@ -127,13 +126,7 @@ export function LoginForm() {
                 )}
               />
               <Field>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <LoaderCircle className="animate-spin" />
-                  ) : (
-                    "登入"
-                  )}
-                </Button>
+                <SubmitButton actionName="登入" isSubmitting={isSubmitting} />
               </Field>
               <FieldSeparator className="*:data-[slot=field-separator-content]:bg-card">
                 或使用以下方式登入

@@ -10,7 +10,8 @@ const NavBar = () => {
   const router = useRouter()
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
     router.push("/login");
     toast.success("登出成功！");
   };

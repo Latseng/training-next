@@ -4,3 +4,19 @@ export interface Exercise {
   sets: number; // 組數
   reps: number; // 次數
 }
+
+export interface TrainingSession {
+  title: string;
+  note: string;
+}
+export interface TrainingActivity {
+  name: string;
+  category: string;
+  description: string;
+}
+
+export interface ActivityRecords {
+  set: number;
+  weight: number;
+  repetition: number;
+}
