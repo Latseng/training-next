@@ -1,5 +1,6 @@
 "use client";
 
+import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import { CirclePlus, SquarePlus, Trash2, X } from "lucide-react";
 
@@ -26,6 +27,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -33,6 +35,7 @@ import TrainingItemDialog from "./TrainingItemDialog";
 import { Exercise, TrainingActivity } from "@/lib/types";
 import TrainingVolumeDialog from "./TrainingVolumeDialog";
 import TrainingSessionDialog from "./TrainingSessionDialog";
+import { fetcher } from "@/lib/fetcher";
 
 interface TrainingSessionState {
   title: string;
@@ -41,6 +44,12 @@ interface TrainingSessionState {
 }
 
 const TrainingPrograms = () => {
+  const { data, error, isLoading } = useSWR(
+    "/training-sessions",
+    fetcher
+  );
+  console.log(data);
+  
   const [trainingCardOpen, setTrainingCardOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState("");
   const [programCardOpen, setProgramCardOpen] = useState(false);
@@ -153,32 +162,42 @@ const TrainingPrograms = () => {
         exercise={exerciseSetting}
         setTrainingSessios={setTrainingActivities}
       />
-      {/* <Accordion type="multiple">
+      <Accordion type="multiple">
         <AccordionItem value="item-1">
           <AccordionTrigger>範例</AccordionTrigger>
           <AccordionContent>
             Yes. It adheres to the WAI-ARIA design pattern.
           </AccordionContent>
         </AccordionItem>
-        {exercises.map((exercise, index) => (
-          <AccordionItem key={index} value={exercise.name}>
-            <div className="flex items-center justify-between">
-              <AccordionTrigger>{exercise.name}</AccordionTrigger>
-              <Button
-                className="hover:bg-red-500 hover:text-white"
-                variant="ghost"
-                size="sm"
-                onClick={() => handleDeleteExercise(index)}
-              >
-                <Trash2 />
-              </Button>
+        {data ? (
+          data.map((item, index) => (
+            <AccordionItem key={item.id} value={`訓練 ${index + 1}`}>
+              <div className="flex items-center justify-between">
+                <AccordionTrigger>{item.title !== "" ? item.title : `訓練 ${index + 1}`}</AccordionTrigger>
+                <Button
+                  className="hover:bg-red-500 hover:text-white"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleDeleteExercise(index)}
+                >
+                  <Trash2 />
+                </Button>
+              </div>
+              <AccordionContent>
+                <Button></Button>
+              </AccordionContent>
+            </AccordionItem>
+          ))
+        ) : (
+          <div className="flex items-center space-x-4">
+            <Skeleton className="h-12 w-12 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-[250px]" />
+              <Skeleton className="h-4 w-[200px]" />
             </div>
-            <AccordionContent>
-              <Button></Button>
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion> */}
+          </div>
+        )}
+      </Accordion>
     </div>
   );
 };

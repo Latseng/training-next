@@ -1,8 +1,6 @@
 import TrainingPrograms from "@/components/TrainingPrograms";
 
-
-export default function Home() {
-
+export default async function Home() {
   return (
     <main>
       <TrainingPrograms />

@@ -9,14 +9,9 @@ import {
 
 import {
   Field,
-  FieldContent,
-  FieldDescription,
   FieldError,
   FieldGroup,
   FieldLabel,
-  FieldLegend,
-  FieldSet,
-  FieldTitle,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Controller, useForm } from "react-hook-form";
@@ -25,8 +20,6 @@ import * as z from "zod";
 import SubmitButton from "./SubmitButton";
 import { useState } from "react";
 import { Textarea } from "./ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@radix-ui/react-radio-group";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -50,8 +43,6 @@ const categories = [
 
 const TrainingSessionDialog = ({ isOpen, setIsOpen, setTrainingSession, date }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -77,14 +68,13 @@ const TrainingSessionDialog = ({ isOpen, setIsOpen, setTrainingSession, date }) 
       date: formattedDate,
     };
     
-    const accessToken = localStorage.getItem("access_token")
     try {
       const res = await fetch("http://localhost:8000/training-sessions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`,
         },
+        credentials: "include",
         body: JSON.stringify(sessionData),
       });
       
@@ -96,7 +86,7 @@ const TrainingSessionDialog = ({ isOpen, setIsOpen, setTrainingSession, date }) 
         toast.success("建立訓練成功！");
         // router.push("/");
       } else {
-        setError(data.detail);
+        toast.warning(data.detail)
       }
     } catch(err) {
       console.error(err);
