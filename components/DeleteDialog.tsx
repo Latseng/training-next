@@ -26,8 +26,8 @@ const DeleteDialog = ({
     <AlertDialog open={isOpen} onOpenChange={() => setIsOpen(false)}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>確定要進行刪除操作嗎？</AlertDialogTitle>
-          <AlertDialogDescription>本操作無法復原</AlertDialogDescription>
+          <AlertDialogTitle>確定要刪除嗎？</AlertDialogTitle>
+          <AlertDialogDescription>注意：本操作無法復原</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>取消</AlertDialogCancel>

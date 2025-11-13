@@ -29,12 +29,10 @@ interface TrainingSessionState {
   note: string;
 }
 
-const API_ENDPOINT = "/training-sessions";
+const API_ENDPOINT = "/api/training-sessions";
 
 const TrainingSessions = () => {
   const { data, mutate } = useSWR(API_ENDPOINT, fetcher);
-  console.log(data);
-
   const [trainingCardOpen, setTrainingCardOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState("");
   const [programCardOpen, setProgramCardOpen] = useState(false);
@@ -120,7 +118,12 @@ const TrainingSessions = () => {
           mutate={mutate}
         />
       </div>
-      <SessionList data={data} API_ENDPOINT={API_ENDPOINT} mutate={mutate} />
+      <SessionList
+        sessionData={data}
+        API_ENDPOINT={API_ENDPOINT}
+        mutate={mutate}
+        date={date}
+      />
       <TrainingItemDialog
         isOpen={isTrainingItemDialogOpen}
         setIsOpen={setIsTrainingItemDialogOpen}

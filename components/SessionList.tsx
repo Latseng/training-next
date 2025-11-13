@@ -16,26 +16,36 @@ import { mutateFetcher } from "@/lib/fetcher";
 
 import type { KeyedMutator } from "swr";
 import { toast } from "sonner";
+import TrainingSessionDialog from "./TrainingSessionDialog";
 
 interface SessionListProps {
-  data: TrainingSession[];
+  sessionData: TrainingSession[];
   API_ENDPOINT: string;
   mutate: KeyedMutator<TrainingSession[]>;
+  date: Date;
 }
 
 const SessionList = ({
-  data,
+  sessionData,
   API_ENDPOINT,
-  mutate
+  mutate,
+  date
 }: SessionListProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [deleteSessionId, setDeleteSessionId] = useState("");
-  const handleEditSession = (id: string) => {
-    console.log(id);
+  const [selectedSessionId, setSelectedSessionId] = useState("");
+  const [selectedSessionData, setSelectedSessionData] =
+    useState<TrainingSession | null>(null);
+  const [isTrainingSessionDialog, setIsTrainingSessionDialog] = useState(false);
+
+  const handleEditSession = async (id: string) => {
+    const selectedData = sessionData.filter((data) => data.id === id)[0]
+    setSelectedSessionData(selectedData);
+    setIsTrainingSessionDialog(true);
   };
+
   const handleDeleteDialog = (id: string) => {
     setIsDeleteDialogOpen(true)
-    setDeleteSessionId(id)
+    setSelectedSessionId(id)
   }
   const handleDeleteSession = async (id: string) => {
     try {
@@ -44,16 +54,16 @@ const SessionList = ({
       if(isSuccess) toast.success("刪除訓練成功")
     } catch (error) {
       // 若失敗就回滾
-      mutate(data, false);
+      mutate(sessionData, false);
       console.error(error);
     }
   };
   return (
     <>
       <Accordion type="multiple">
-        {data ? (
-          data.length > 0 ? (
-            data.map((item, index) => (
+        {sessionData ? (
+          sessionData.length > 0 ? (
+            sessionData.map((item, index) => (
               <AccordionItem key={item.id} value={`訓練 ${index + 1}`}>
                 <div className="px-4 py-2 flex items-center justify-between">
                   <AccordionTrigger>
@@ -92,10 +102,17 @@ const SessionList = ({
           </div>
         )}
       </Accordion>
+      <TrainingSessionDialog
+        isOpen={isTrainingSessionDialog}
+        setIsOpen={setIsTrainingSessionDialog}
+        date={date}
+        mutate={mutate}
+        initialData={selectedSessionData}
+      />
       <DeleteDialog
         isOpen={isDeleteDialogOpen}
         setIsOpen={setIsDeleteDialogOpen}
-        id={deleteSessionId}
+        id={selectedSessionId}
         handleDelete={handleDeleteSession}
       />
     </>

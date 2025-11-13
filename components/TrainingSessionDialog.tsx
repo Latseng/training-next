@@ -1,4 +1,5 @@
 "use client";
+
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import SubmitButton from "./SubmitButton";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Textarea } from "./ui/textarea";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -31,6 +32,7 @@ interface TrainingSessionDialogProps {
   setIsOpen: (open: boolean) => void;
   date: Date;
   mutate: KeyedMutator<TrainingSession[]>;
+  initialData?: TrainingSession | null;
 }
 
 const formSchema = z.object({
@@ -38,33 +40,32 @@ const formSchema = z.object({
   note: z.string().trim().optional(),
 });
 
-const categories = [
-  {
-    id: "strength and conditioning",
-    title: "肌力與體能",
-    description: "肌力與體能訓練",
-  },
-  {
-    id: "other",
-    title: "其他",
-    description: "自訂訓練類型",
-  },
-] as const;
-
 const TrainingSessionDialog = ({
   isOpen,
   setIsOpen,
   date,
-  mutate
+  mutate,
+  initialData,
 }: TrainingSessionDialogProps) => {
+  const isEditMode = !!initialData;
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
+      title:  "",
       note: "",
     },
   });
+
+  useEffect(() => {
+    if (isOpen && initialData) {
+      form.reset({
+        title: initialData.title ?? "",
+        note: initialData.note ?? "",
+      });
+    }
+  }, [isOpen, initialData, form]);
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
@@ -77,15 +78,28 @@ const TrainingSessionDialog = ({
 
   async function onSubmit(formData: z.infer<typeof formSchema>) {
     setIsSubmitting(true);
-    const formattedDate = format(new Date(date), "yyyy-MM-dd");
-    const sessionData = {
+    const sessionData: Partial<TrainingSession> = {
       ...formData,
-      date: formattedDate,
     };
 
+    let url = "http://localhost:8000/api/training-sessions";
+    let method = "POST";
+    let successMessage = "建立訓練成功！";
+
+    if (isEditMode) {
+      // 編輯模式
+      url = `${url}/${initialData.id}`;
+      method = "PUT";
+      successMessage = "修改訓練成功！";
+    } else {
+      // 新增模式
+      const formattedDate = format(new Date(date), "yyyy-MM-dd");
+      sessionData.date = formattedDate; // 只有新增時才加入 date
+    }
+
     try {
-      const res = await fetch("http://localhost:8000/training-sessions", {
-        method: "POST",
+      const res = await fetch(url, {
+        method: method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -99,8 +113,7 @@ const TrainingSessionDialog = ({
 
       if (res.ok) {
         setIsOpen(false);
-        toast.success("建立訓練成功！");
-        // router.push("/");
+        toast.success(successMessage)
       } else {
         toast.warning(data.detail);
       }
@@ -114,54 +127,13 @@ const TrainingSessionDialog = ({
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>新增訓練</DialogTitle>
-          <DialogDescription>建立一筆訓練計畫</DialogDescription>
+          <DialogTitle>{isEditMode ? "修改訓練" : "新增訓練"}</DialogTitle>
+          <DialogDescription>
+            {isEditMode ? "修改" : "新增"}訓練計畫
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
-            {/* <Controller
-              name="category"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <FieldSet>
-                  <FieldLegend>類型</FieldLegend>
-                  <FieldDescription>請選擇訓練類型</FieldDescription>
-                  <RadioGroup
-                    name={field.name}
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    className="space-y-2"
-                  >
-                    {categories.map((category) => (
-                      <FieldLabel
-                        key={category.id}
-                        htmlFor={`form-rhf-radiogroup-${category.id}`}
-                      >
-                        <Field
-                          orientation="horizontal"
-                          data-invalid={fieldState.invalid}
-                        >
-                          <FieldContent>
-                            <FieldTitle>{category.title}</FieldTitle>
-                            <FieldDescription>
-                              {category.description}
-                            </FieldDescription>
-                          </FieldContent>
-                          <RadioGroupItem
-                            value={category.id}
-                            id={`form-rhf-radiogroup-${category.id}`}
-                            aria-invalid={fieldState.invalid}
-                          />
-                        </Field>
-                      </FieldLabel>
-                    ))}
-                  </RadioGroup>
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </FieldSet>
-              )}
-            /> */}
             <Controller
               name="title"
               control={form.control}
@@ -200,7 +172,10 @@ const TrainingSessionDialog = ({
               )}
             />
             <Field>
-              <SubmitButton actionName="新增" isSubmitting={isSubmitting} />
+              <SubmitButton
+                actionName={isEditMode ? "修改" : "新增"}
+                isSubmitting={isSubmitting}
+              />
             </Field>
           </FieldGroup>
         </form>
