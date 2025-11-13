@@ -23,6 +23,16 @@ import { Textarea } from "./ui/textarea";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
+import type { KeyedMutator } from "swr";
+import { TrainingSession } from "@/lib/types";
+
+interface TrainingSessionDialogProps {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+  date: Date;
+  mutate: KeyedMutator<TrainingSession[]>;
+}
+
 const formSchema = z.object({
   title: z.string().trim().optional(),
   note: z.string().trim().optional(),
@@ -41,7 +51,12 @@ const categories = [
   },
 ] as const;
 
-const TrainingSessionDialog = ({ isOpen, setIsOpen, setTrainingSession, date }) => {
+const TrainingSessionDialog = ({
+  isOpen,
+  setIsOpen,
+  date,
+  mutate
+}: TrainingSessionDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -67,7 +82,7 @@ const TrainingSessionDialog = ({ isOpen, setIsOpen, setTrainingSession, date }) 
       ...formData,
       date: formattedDate,
     };
-    
+
     try {
       const res = await fetch("http://localhost:8000/training-sessions", {
         method: "POST",
@@ -77,18 +92,19 @@ const TrainingSessionDialog = ({ isOpen, setIsOpen, setTrainingSession, date }) 
         credentials: "include",
         body: JSON.stringify(sessionData),
       });
-      
+
+      mutate();
+
       const data = await res.json();
 
       if (res.ok) {
-        setTrainingSession(formData);
-        setIsOpen(false)
+        setIsOpen(false);
         toast.success("建立訓練成功！");
         // router.push("/");
       } else {
-        toast.warning(data.detail)
+        toast.warning(data.detail);
       }
-    } catch(err) {
+    } catch (err) {
       console.error(err);
     } finally {
       setIsSubmitting(false);

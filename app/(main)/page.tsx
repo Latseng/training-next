@@ -1,4 +1,4 @@
-import TrainingPrograms from "@/components/TrainingPrograms";
+import TrainingPrograms from "@/components/TrainingSessions";
 
 export default async function Home() {
   return (

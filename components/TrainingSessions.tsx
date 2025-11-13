@@ -2,32 +2,17 @@
 
 import useSWR from "swr";
 import { Button } from "@/components/ui/button";
-import { CirclePlus, SquarePlus, Trash2, X } from "lucide-react";
+import { SquarePlus } from "lucide-react";
 
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { isSameDay, format } from "date-fns";
-import { zhTW } from "date-fns/locale";
+
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Skeleton } from "@/components/ui/skeleton";
+
 import { Calendar as CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -36,6 +21,7 @@ import { Exercise, TrainingActivity } from "@/lib/types";
 import TrainingVolumeDialog from "./TrainingVolumeDialog";
 import TrainingSessionDialog from "./TrainingSessionDialog";
 import { fetcher } from "@/lib/fetcher";
+import SessionList from "./SessionList";
 
 interface TrainingSessionState {
   title: string;
@@ -43,22 +29,16 @@ interface TrainingSessionState {
   note: string;
 }
 
-const TrainingPrograms = () => {
-  const { data, error, isLoading } = useSWR(
-    "/training-sessions",
-    fetcher
-  );
+const API_ENDPOINT = "/training-sessions";
+
+const TrainingSessions = () => {
+  const { data, mutate } = useSWR(API_ENDPOINT, fetcher);
   console.log(data);
-  
+
   const [trainingCardOpen, setTrainingCardOpen] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState("");
   const [programCardOpen, setProgramCardOpen] = useState(false);
   const [isTrainingSessionDialog, setIsTrainingSessionDialog] = useState(false);
-  const [trainingSession, setTrainingSession] = useState<TrainingSessionState>({
-    title: "",
-    date: "",
-    note: "",
-  });
   const [isTrainingItemDialogOpen, setIsTrainingItemDialogOpen] =
     useState(false);
   const [isTrainingVolumeDialogOpen, setIsTrainingVolumeDialogOpen] =
@@ -66,7 +46,6 @@ const TrainingPrograms = () => {
   const [tainingProgram, setTrainingProgram] = useState<
     "strength" | "power" | "endurance" | "other"
   >("strength");
-  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [exerciseSetting, setExerciseSetting] = useState("");
   const [trainingActivities, setTrainingActivities] = useState<
     TrainingActivity[]
@@ -96,11 +75,9 @@ const TrainingPrograms = () => {
     setIsTrainingItemDialogOpen(true);
     setTrainingProgram(program);
   };
+
   const handleVolumeSetting = () => {
     setIsTrainingVolumeDialogOpen(true);
-  };
-  const handleDeleteExercise = (exercise) => {
-    console.log("刪除");
   };
 
   return (
@@ -139,17 +116,11 @@ const TrainingPrograms = () => {
         <TrainingSessionDialog
           isOpen={isTrainingSessionDialog}
           setIsOpen={setIsTrainingSessionDialog}
-          setTrainingSession={setTrainingSession}
           date={date}
+          mutate={mutate}
         />
       </div>
-      {!trainingActivities.length ? (
-        <div className="flex flex-col items-center">
-          <h3>今天沒有訓練計劃...</h3>
-        </div>
-      ) : (
-        <div>訓練清單</div>
-      )}
+      <SessionList data={data} API_ENDPOINT={API_ENDPOINT} mutate={mutate} />
       <TrainingItemDialog
         isOpen={isTrainingItemDialogOpen}
         setIsOpen={setIsTrainingItemDialogOpen}
@@ -162,44 +133,8 @@ const TrainingPrograms = () => {
         exercise={exerciseSetting}
         setTrainingSessios={setTrainingActivities}
       />
-      <Accordion type="multiple">
-        <AccordionItem value="item-1">
-          <AccordionTrigger>範例</AccordionTrigger>
-          <AccordionContent>
-            Yes. It adheres to the WAI-ARIA design pattern.
-          </AccordionContent>
-        </AccordionItem>
-        {data ? (
-          data.map((item, index) => (
-            <AccordionItem key={item.id} value={`訓練 ${index + 1}`}>
-              <div className="flex items-center justify-between">
-                <AccordionTrigger>{item.title !== "" ? item.title : `訓練 ${index + 1}`}</AccordionTrigger>
-                <Button
-                  className="hover:bg-red-500 hover:text-white"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleDeleteExercise(index)}
-                >
-                  <Trash2 />
-                </Button>
-              </div>
-              <AccordionContent>
-                <Button></Button>
-              </AccordionContent>
-            </AccordionItem>
-          ))
-        ) : (
-          <div className="flex items-center space-x-4">
-            <Skeleton className="h-12 w-12 rounded-full" />
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-[250px]" />
-              <Skeleton className="h-4 w-[200px]" />
-            </div>
-          </div>
-        )}
-      </Accordion>
     </div>
   );
 };
 
-export default TrainingPrograms;
+export default TrainingSessions;
