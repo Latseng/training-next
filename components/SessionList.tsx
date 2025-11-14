@@ -17,6 +17,7 @@ import { mutateFetcher } from "@/lib/fetcher";
 import type { KeyedMutator } from "swr";
 import { toast } from "sonner";
 import TrainingSessionDialog from "./TrainingSessionDialog";
+import ActivityCards from "./ActivityCards";
 
 interface SessionListProps {
   sessionData: TrainingSession[];
@@ -29,7 +30,7 @@ const SessionList = ({
   sessionData,
   API_ENDPOINT,
   mutate,
-  date
+  date,
 }: SessionListProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedSessionId, setSelectedSessionId] = useState("");
@@ -38,20 +39,20 @@ const SessionList = ({
   const [isTrainingSessionDialog, setIsTrainingSessionDialog] = useState(false);
 
   const handleEditSession = async (id: string) => {
-    const selectedData = sessionData.filter((data) => data.id === id)[0]
+    const selectedData = sessionData.filter((data) => data.id === id)[0];
     setSelectedSessionData(selectedData);
     setIsTrainingSessionDialog(true);
   };
 
   const handleDeleteDialog = (id: string) => {
-    setIsDeleteDialogOpen(true)
-    setSelectedSessionId(id)
-  }
+    setIsDeleteDialogOpen(true);
+    setSelectedSessionId(id);
+  };
   const handleDeleteSession = async (id: string) => {
     try {
       const isSuccess = await mutateFetcher(API_ENDPOINT, "DELETE", id);
       mutate(); // 再重新驗證
-      if(isSuccess) toast.success("刪除訓練成功")
+      if (isSuccess) toast.success("刪除訓練成功");
     } catch (error) {
       // 若失敗就回滾
       mutate(sessionData, false);
@@ -87,8 +88,8 @@ const SessionList = ({
                     </Button>
                   </ButtonGroup>
                 </div>
-                <AccordionContent className="px-8">
-                  <div>訓練{index}的內容</div>
+                <AccordionContent className="px-8 space-y-4">
+                  <ActivityCards note={item.note} id={item.id}  />
                 </AccordionContent>
               </AccordionItem>
             ))

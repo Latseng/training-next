@@ -14,40 +14,16 @@ import {
 } from "@/components/ui/popover";
 
 import { Calendar as CalendarIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { useState } from "react";
-import TrainingItemDialog from "./TrainingItemDialog";
-import { Exercise, TrainingActivity } from "@/lib/types";
-import TrainingVolumeDialog from "./TrainingVolumeDialog";
 import TrainingSessionDialog from "./TrainingSessionDialog";
 import { fetcher } from "@/lib/fetcher";
 import SessionList from "./SessionList";
-
-interface TrainingSessionState {
-  title: string;
-  date: string;
-  note: string;
-}
 
 const API_ENDPOINT = "/api/training-sessions";
 
 const TrainingSessions = () => {
   const { data, mutate } = useSWR(API_ENDPOINT, fetcher);
-  const [trainingCardOpen, setTrainingCardOpen] = useState(false);
-  const [selectedActivity, setSelectedActivity] = useState("");
-  const [programCardOpen, setProgramCardOpen] = useState(false);
   const [isTrainingSessionDialog, setIsTrainingSessionDialog] = useState(false);
-  const [isTrainingItemDialogOpen, setIsTrainingItemDialogOpen] =
-    useState(false);
-  const [isTrainingVolumeDialogOpen, setIsTrainingVolumeDialogOpen] =
-    useState(false);
-  const [tainingProgram, setTrainingProgram] = useState<
-    "strength" | "power" | "endurance" | "other"
-  >("strength");
-  const [exerciseSetting, setExerciseSetting] = useState("");
-  const [trainingActivities, setTrainingActivities] = useState<
-    TrainingActivity[]
-  >([]);
 
   const [date, setDate] = useState<Date>(new Date());
 
@@ -61,21 +37,6 @@ const TrainingSessions = () => {
     // 2. 格式化日期
     // 注意：date-fns 的格式字串為 'MM/dd' (大寫 M for 月份，小寫 d for 日期)
     return format(selectedDate, "MM/dd");
-  };
-
-  const handleTrainingActivitySetting = (category: string) => {
-    setSelectedActivity(category);
-  };
-
-  const handleTrainingItemDialogOpen = (
-    program: "strength" | "power" | "endurance" | "other"
-  ) => {
-    setIsTrainingItemDialogOpen(true);
-    setTrainingProgram(program);
-  };
-
-  const handleVolumeSetting = () => {
-    setIsTrainingVolumeDialogOpen(true);
   };
 
   return (
@@ -123,18 +84,6 @@ const TrainingSessions = () => {
         API_ENDPOINT={API_ENDPOINT}
         mutate={mutate}
         date={date}
-      />
-      <TrainingItemDialog
-        isOpen={isTrainingItemDialogOpen}
-        setIsOpen={setIsTrainingItemDialogOpen}
-        program={tainingProgram}
-        setExerciseSetting={setExerciseSetting}
-      />
-      <TrainingVolumeDialog
-        isOpen={isTrainingVolumeDialogOpen}
-        setIsOpen={setIsTrainingVolumeDialogOpen}
-        exercise={exerciseSetting}
-        setTrainingSessios={setTrainingActivities}
       />
     </div>
   );

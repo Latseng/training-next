@@ -22,8 +22,8 @@ export interface TrainingActivity {
   description: string;
 }
 
-export interface ActivityRecords {
-  set: number;
+export interface ActivityRecord {
+  id: string;
   weight: number;
   repetition: number;
 }
