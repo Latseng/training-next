@@ -94,7 +94,7 @@ const SessionList = ({
               </AccordionItem>
             ))
           ) : (
-            <h3>今天還沒有訓練計劃...</h3>
+            <h3 className="m-4 text-center font-bold">還沒有建立訓練計劃...</h3>
           )
         ) : (
           <div className="space-y-2">

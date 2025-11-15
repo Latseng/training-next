@@ -19,23 +19,23 @@ import TrainingSessionDialog from "./TrainingSessionDialog";
 import { fetcher } from "@/lib/fetcher";
 import SessionList from "./SessionList";
 
-const API_ENDPOINT = "/api/training-sessions";
+const API_BASE = "/api/training-sessions";
 
 const TrainingSessions = () => {
-  const { data, mutate } = useSWR(API_ENDPOINT, fetcher);
+   const [date, setDate] = useState<Date>(new Date());
+  const params = new URLSearchParams();
+
+  params.append("start_date", format(date, "yyyy-MM-dd"));
+
+  const swrKey = `${API_BASE}?${params.toString()}`;
+  const { data, mutate } = useSWR(swrKey, fetcher);
   const [isTrainingSessionDialog, setIsTrainingSessionDialog] = useState(false);
 
-  const [date, setDate] = useState<Date>(new Date());
-
   const formatDateDisplay = (selectedDate: Date) => {
-    // 1. 判斷是否為「今天」
-    // isSameDay 會自動比較 selectedDate 與 new Date() (當前時間) 的日期部分，並忽略時間
     if (isSameDay(selectedDate, new Date())) {
       return "今天";
     }
 
-    // 2. 格式化日期
-    // 注意：date-fns 的格式字串為 'MM/dd' (大寫 M for 月份，小寫 d for 日期)
     return format(selectedDate, "MM/dd");
   };
 
@@ -81,7 +81,7 @@ const TrainingSessions = () => {
       </div>
       <SessionList
         sessionData={data}
-        API_ENDPOINT={API_ENDPOINT}
+        API_ENDPOINT={API_BASE}
         mutate={mutate}
         date={date}
       />
