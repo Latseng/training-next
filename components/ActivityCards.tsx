@@ -21,6 +21,7 @@ import ActivityRecordDialog from "./ActivityRecordDialog";
 import { ActivityRecord } from "@/lib/types";
 import { ButtonGroup } from "./ui/button-group";
 import SetVolumeDialog from "./SetVolumeDialog";
+import { toast } from "sonner";
 
 interface ActivityCardsProps {
   note: string;
@@ -34,6 +35,7 @@ interface SelectedSetData {
 }
 
 const ActivityCards = ({ note, id }: ActivityCardsProps) => {
+  
   const [trainingCardOpen, setTrainingCardOpen] = useState(false);
   const [isActivityDialogOpen, setIsActivityDialogOpen] = useState(false);
   const [activityCategory, setActivityCategory] = useState("");
@@ -43,14 +45,6 @@ const ActivityCards = ({ note, id }: ActivityCardsProps) => {
   const [isSetVolumeDialog, setIsSetVolumeDialog] = useState(false)
   const [selectedSetData, setSelectedSetData] = useState<SelectedSetData|null>(null);
 
-  // console.log(activityCategory, activityName);
-  // console.log(activityRecord);
-
-  // const handleSettingActivity = (category:string) => {
-  //   setActivityCategory(category)
-  //   setIsActivityDialogOpen(true)
-  // }
-  // console.log(activityCategory);
   const handleCancelActivity = () => {
     setActivityCategory("");
     setActivityName("");
@@ -70,13 +64,46 @@ const ActivityCards = ({ note, id }: ActivityCardsProps) => {
 
   const handleActivitySubmit = async () => {
     const activityPayload = {
-      sessionId: id,
+      session_id: id,
       name: activityName,
       category: activityCategory,
-      activityRecords: activityRecord.map((item, index) => ({setNumber: index + 1, weight: item.weight, repetition: item.repetition}))
-    }
+      activity_records: activityRecord.map((item, index) => ({
+        set_number: index + 1,
+        weight: item.weight,
+        repetition: item.repetition,
+      })),
+    };
     console.log(activityPayload);
- 
+
+    try {
+      const response = await fetch(
+        "http://localhost:8000/api/training-activities",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify(activityPayload),
+        }
+      );
+
+      const data = await response.json();
+      console.log(data);
+      
+      if (response.ok) {
+        setActivityName("")
+        setActivityCategory("")
+        setActivityRecord([])
+        toast.success("建立資料成功");
+      } else {
+        toast.warning("建立資料失敗");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      toast.info("非同步處理結束")
+    } 
   }
 
   return (

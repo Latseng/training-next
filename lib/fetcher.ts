@@ -12,12 +12,12 @@ export const fetcher = async (url: string) =>
   });
 
 export async function mutateFetcher(
-  url: string,
+  endpoint: string,
   method = "POST",
   id = "",
   payload = {}
 ) {
-  const response = await fetch(`${API_URL}${url}/${id}`, {
+  const response = await fetch(`${API_URL}${endpoint}/${id}`, {
     method,
     credentials: "include",
     headers: {
