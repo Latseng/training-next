@@ -62,7 +62,6 @@ const SetVolumeDialog = ({
 
   useEffect(() => {
       if (isOpen && selectedSetData) {
-        console.log(selectedSetData);
         
         form.reset({
           weight: selectedSetData?.weight ?? 1,

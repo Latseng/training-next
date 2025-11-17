@@ -10,20 +10,25 @@ export interface TrainingSession {
   user_id: string;
   title: string;
   note: string;
-  date: string
-  create_at: string
+  date: string;
+  activities: TrainingActivity[]
+  create_at: string;
 }
 
-export type TrainingSessionCreateRequest = Omit<TrainingSession, "id" | "create_at" | "user_id">;
+export type TrainingSessionCreateRequest = Omit<TrainingSession, "id" | "create_at" | "user_id" | "activities">;
 
 export interface TrainingActivity {
+  id: string;
+  session_id: string;
   name: string;
   category: string;
   description: string;
+  activity_records: ActivityRecord[]
 }
 
 export interface ActivityRecord {
   id: string;
+  set_number: number
   weight: number;
   repetition: number;
 }

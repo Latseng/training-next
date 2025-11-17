@@ -14,6 +14,7 @@ interface DeleteDialogProps {
   setIsOpen: (open: boolean) => void;
   id: string;
   handleDelete: (id: string) => void;
+  type: string
 }
 
 const DeleteDialog = ({
@@ -21,12 +22,13 @@ const DeleteDialog = ({
   setIsOpen,
   id,
   handleDelete,
+  type
 }: DeleteDialogProps) => {
   return (
     <AlertDialog open={isOpen} onOpenChange={() => setIsOpen(false)}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>確定要刪除嗎？</AlertDialogTitle>
+          <AlertDialogTitle>確定要刪除{type}嗎？</AlertDialogTitle>
           <AlertDialogDescription>注意：本操作無法復原</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

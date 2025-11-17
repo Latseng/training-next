@@ -27,7 +27,7 @@ const TrainingSessions = () => {
 
   params.append("start_date", format(date, "yyyy-MM-dd"));
 
-  const swrKey = `${API_BASE}?${params.toString()}`;
+  const swrKey = `${API_BASE}/with-activities?${params.toString()}`;
   const { data, mutate } = useSWR(swrKey, fetcher);
   const [isTrainingSessionDialog, setIsTrainingSessionDialog] = useState(false);
 
@@ -81,7 +81,7 @@ const TrainingSessions = () => {
       </div>
       <SessionList
         sessionData={data}
-        API_ENDPOINT={API_BASE}
+        API_BASE={API_BASE}
         mutate={mutate}
         date={date}
       />

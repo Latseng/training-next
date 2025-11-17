@@ -2,7 +2,6 @@ import {
   Card,
   CardAction,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -14,19 +13,28 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "./ui/button";
-import { Edit, Plus, SlidersHorizontal, SquarePen, Trash, Trash2, X } from "lucide-react";
+import { SlidersHorizontal, SquarePen, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import TrainingActivityDialog from "./TrainingActivityDialog";
 import ActivityRecordDialog from "./ActivityRecordDialog";
-import { ActivityRecord } from "@/lib/types";
+import { ActivityRecord, TrainingActivity } from "@/lib/types";
 import { ButtonGroup } from "./ui/button-group";
 import SetVolumeDialog from "./SetVolumeDialog";
 import { toast } from "sonner";
 
+import type { KeyedMutator } from "swr";
+import { TrainingSession } from "@/lib/types";
+import DeleteDialog from "./DeleteDialog";
+import { mutateFetcher } from "@/lib/fetcher";
+import TempActivityCard from "./TempActivityCard";
+
 interface ActivityCardsProps {
   note: string;
-  id: string
+  id: string;
+  mutate: KeyedMutator<TrainingSession[]>;
+  activityData: TrainingActivity[];
 }
+
 interface SelectedSetData {
   id: string;
   weight: number;
@@ -34,46 +42,57 @@ interface SelectedSetData {
   set: number;
 }
 
-const ActivityCards = ({ note, id }: ActivityCardsProps) => {
-  
-  const [trainingCardOpen, setTrainingCardOpen] = useState(false);
+const ActivityCards = ({
+  note,
+  id,
+  activityData,
+  mutate,
+}: ActivityCardsProps) => {
   const [isActivityDialogOpen, setIsActivityDialogOpen] = useState(false);
   const [activityCategory, setActivityCategory] = useState("");
   const [activityName, setActivityName] = useState("");
   const [isVolumeDialogOpen, setIsVolumeDialogOpen] = useState(false);
-  const [activityRecord, setActivityRecord] = useState<ActivityRecord[]>([]);
-  const [isSetVolumeDialog, setIsSetVolumeDialog] = useState(false)
-  const [selectedSetData, setSelectedSetData] = useState<SelectedSetData|null>(null);
+  const [activityRecordTemp, setActivityRecordTemp] = useState<
+    ActivityRecord[]
+  >([]);
+  const [isSetVolumeDialog, setIsSetVolumeDialog] = useState(false);
+  const [selectedSetData, setSelectedSetData] =
+    useState<SelectedSetData | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedActivityId, setSelectedActivityId] = useState("");
+  const [isResetVolume, setIsResetVolume] = useState(false);
 
   const handleCancelActivity = () => {
     setActivityCategory("");
     setActivityName("");
-    setActivityRecord([])
+    setActivityRecordTemp([]);
   };
 
   const handleSetVolume = (id: string, set: number) => {
-    setSelectedSetData({...activityRecord.filter((item) => item.id ===id)[0], set: set})
-    setIsSetVolumeDialog(true)
-  }
+    setSelectedSetData({
+      ...activityRecordTemp.filter((item) => item.id === id)[0],
+      set: set,
+    });
+    setIsSetVolumeDialog(true);
+  };
 
-  const handleActivityRecordDelete = (id:string) => {
-    setActivityRecord((prev) =>
+  const handleActivityRecordTempDelete = (id: string) => {
+    setActivityRecordTemp((prev) =>
       prev.filter((prevData) => prevData.id !== id)
     );
-  }
+  };
 
   const handleActivitySubmit = async () => {
     const activityPayload = {
       session_id: id,
       name: activityName,
       category: activityCategory,
-      activity_records: activityRecord.map((item, index) => ({
+      activity_records: activityRecordTemp.map((item, index) => ({
         set_number: index + 1,
         weight: item.weight,
         repetition: item.repetition,
       })),
     };
-    console.log(activityPayload);
 
     try {
       const response = await fetch(
@@ -90,192 +109,150 @@ const ActivityCards = ({ note, id }: ActivityCardsProps) => {
 
       const data = await response.json();
       console.log(data);
-      
+
       if (response.ok) {
-        setActivityName("")
-        setActivityCategory("")
-        setActivityRecord([])
+        mutate();
+        setActivityName("");
+        setActivityCategory("");
+        setActivityRecordTemp([]);
         toast.success("建立資料成功");
       } else {
         toast.warning("建立資料失敗");
       }
     } catch (err) {
       console.error(err);
-    } finally {
-      toast.info("非同步處理結束")
-    } 
-  }
+    }
+  };
+
+  const handleDeleteDialog = (id: string) => {
+    setIsDeleteDialogOpen(true);
+    setSelectedActivityId(id);
+  };
+
+  const handleDeleteActivity = async (id: string) => {
+    try {
+      const isSuccess = await mutateFetcher(
+        "/api/training-activities",
+        "DELETE",
+        id
+      );
+      mutate();
+      if (isSuccess) toast.success("刪除訓練項目成功");
+    } catch (error) {
+      console.error(error);
+      toast.error("刪除訓練項目失敗");
+    }
+  };
 
   return (
     <div>
-      <div className="space-y-4">
-        <div>
-          <p>{note}</p>
-        </div>
-        {activityName === "" ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>訓練項目</CardTitle>
-              {trainingCardOpen && (
-                <CardAction>
-                  <Button
-                    variant="ghost"
-                    onClick={() => setTrainingCardOpen(false)}
-                  >
-                    <X />
-                  </Button>
-                </CardAction>
-              )}
-            </CardHeader>
-            <CardContent className="flex justify-around">
-              {trainingCardOpen ? (
-                <div className="space-x-8">
-                  <Button onClick={() => setIsActivityDialogOpen(true)}>
-                    肌力與體能訓練
-                  </Button>
-                  <Button disabled>其他</Button>
-                </div>
-              ) : (
-                <p>尚未建立</p>
-              )}
-            </CardContent>
-            <CardFooter className="flex-col gap-2">
-              {!trainingCardOpen && (
-                <Button
-                  className="w-full"
-                  onClick={() => setTrainingCardOpen(true)}
-                >
-                  <Plus />
-                  新增訓練項目
-                </Button>
-              )}
-            </CardFooter>
-          </Card>
+      <div className="space-y-4 my-4">
+        <TempActivityCard
+          setIsActivityDialogOpen={setIsActivityDialogOpen}
+          activityName={activityName}
+          activityRecordTemp={activityRecordTemp}
+          setIsSetVolumeDialog={setIsSetVolumeDialog}
+          setIsVolumeDialogOpen={setIsVolumeDialogOpen}
+          handleCancelActivity={handleCancelActivity}
+          handleSetVolume={handleSetVolume}
+          handleActivityRecordTempDelete={handleActivityRecordTempDelete}
+          handleActivitySubmit={handleActivitySubmit}
+        />
+        {activityData.length > 0 ? (
+          activityData.map((activity) => (
+            <Card key={activity.id}>
+              <Accordion type="multiple">
+                <AccordionItem value="item-1">
+                  <CardHeader className="flex items-center justify-between">
+                    <AccordionTrigger>
+                      <CardTitle>{activity.name}</CardTitle>
+                    </AccordionTrigger>
+                    <CardAction>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="hover:bg-red-600 hover:text-white"
+                        onClick={() => handleDeleteDialog(activity.id)}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </CardAction>
+                  </CardHeader>
+                  <AccordionContent>
+                    <CardContent>
+                      {isResetVolume ? (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => setIsResetVolume(false)}
+                        >
+                          <X />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setIsResetVolume(true)}
+                        >
+                          <SlidersHorizontal />
+                        </Button>
+                      )}
+                      <div className="space-y-8 my-4">
+                        {activity.activity_records.map((record) => (
+                          <div
+                            key={record.id}
+                            className="flex justify-around items-center"
+                          >
+                            <p>Set：{record.set_number}</p>
+                            <div className="text-center space-y-2">
+                              <p>Weight</p>
+                              <p>{record.weight}</p>
+                            </div>
+                            <div className="text-center space-y-2">
+                              <p>Reps</p>
+                              <p>{record.repetition}</p>
+                            </div>
+                            {isResetVolume && (
+                              <ButtonGroup>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => console.log("編輯", record.id)}
+                                >
+                                  <SquarePen />
+                                </Button>
+                                <Button
+                                  className="hover:bg-red-600 hover:text-white"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => console.log("刪除", record.id)}
+                                >
+                                  <Trash2 />
+                                </Button>
+                              </ButtonGroup>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                    {isResetVolume && (
+                      <CardFooter>
+                        <Button className="w-full">儲存</Button>
+                      </CardFooter>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </Card>
+          ))
         ) : (
           <Card>
-            <CardHeader>
-              <CardTitle>{activityName}</CardTitle>
-              <CardDescription>資料尚未儲存</CardDescription>
-              <CardAction>
-                {activityRecord.length > 0 && (
-                  <Button onClick={() => setIsSetVolumeDialog(true)}>
-                    + 新增組數
-                  </Button>
-                )}
-                <Button variant="ghost" onClick={handleCancelActivity}>
-                  <X />
-                </Button>
-              </CardAction>
-            </CardHeader>
-            <CardContent className="text-center">
-              {activityRecord.length > 0 ? (
-                <>
-                  {activityRecord.map((item, index) => (
-                    <div
-                      key={item.id}
-                      className="my-8 flex justify-around items-center"
-                    >
-                      <p>Set {index + 1}</p>
-                      <div className="text-center space-y-2">
-                        <p>Weight</p>
-                        <p>{item.weight}</p>
-                      </div>
-                      <div className="text-center space-y-2">
-                        <p>Reps</p>
-                        <p>{item.repetition}</p>
-                      </div>
-                      <ButtonGroup>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleSetVolume(item.id, index + 1)}
-                        >
-                          <SquarePen />
-                        </Button>
-                        <Button
-                          className="hover:bg-red-500 hover:text-white"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleActivityRecordDelete(item.id)}
-                        >
-                          <Trash2 />
-                        </Button>
-                      </ButtonGroup>
-                    </div>
-                  ))}
-                  <Button onClick={handleActivitySubmit}>儲存</Button>
-                </>
-              ) : (
-                <Button onClick={() => setIsVolumeDialogOpen(true)}>
-                  <SlidersHorizontal />
-                  訓練量設定
-                </Button>
-              )}
+            <CardContent>
+              <p className="font-semibold text-center">尚未建立訓練項目</p>
             </CardContent>
           </Card>
         )}
-        <Card>
-          <Accordion type="multiple">
-            <AccordionItem value="item-1">
-              <CardHeader className="flex items-center justify-between">
-                <AccordionTrigger>
-                  <CardTitle>範例動作一</CardTitle>
-                </AccordionTrigger>
-                <CardAction>
-                  <Button variant="ghost" size="sm">
-                    <Trash />
-                  </Button>
-                </CardAction>
-              </CardHeader>
-              <AccordionContent>
-                <CardContent className="space-y-8">
-                  <div className="flex justify-around items-center">
-                    <p>Set 1</p>
-                    <div className="text-center space-y-2">
-                      <p>Weight</p>
-                      <p>120</p>
-                    </div>
-                    <div className="text-center space-y-2">
-                      <p>Reps</p>
-                      <p>6</p>
-                    </div>
-                    <Button variant="ghost">
-                      <Edit />
-                    </Button>
-                  </div>
-                  <div className="flex justify-around items-center">
-                    <p>Set 1</p>
-                    <div className="text-center space-y-2">
-                      <p>Weight</p>
-                      <p>120</p>
-                    </div>
-                    <div className="text-center space-y-2">
-                      <p>Reps</p>
-                      <p>6</p>
-                    </div>
-                    <Button variant="ghost">
-                      <Edit />
-                    </Button>
-                  </div>
-                  <div className="flex justify-around items-center">
-                    <p>Set 1</p>
-                    <div className="text-center space-y-2">
-                      <p>Weight</p>
-                      <p>120</p>
-                    </div>
-                    <div className="text-center space-y-2">
-                      <p>Reps</p>
-                      <p>6</p>
-                    </div>
-                    <Button variant="ghost">
-                      <Edit />
-                    </Button>
-                  </div>
-                </CardContent>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </Card>
+        <p>備註：{note === "" ? "無" : note}</p>
       </div>
       <TrainingActivityDialog
         isOpen={isActivityDialogOpen}
@@ -288,15 +265,22 @@ const ActivityCards = ({ note, id }: ActivityCardsProps) => {
         isOpen={isVolumeDialogOpen}
         setIsOpen={setIsVolumeDialogOpen}
         activityName={activityName}
-        setActivityRecord={setActivityRecord}
+        setActivityRecord={setActivityRecordTemp}
       />
       <SetVolumeDialog
         activityName={activityName}
         isOpen={isSetVolumeDialog}
         setIsOpen={setIsSetVolumeDialog}
-        setActivityRecord={setActivityRecord}
+        setActivityRecord={setActivityRecordTemp}
         selectedSetData={selectedSetData}
         setSelectedSetData={setSelectedSetData}
+      />
+      <DeleteDialog
+        isOpen={isDeleteDialogOpen}
+        setIsOpen={setIsDeleteDialogOpen}
+        id={selectedActivityId}
+        handleDelete={handleDeleteActivity}
+        type="訓練項目"
       />
     </div>
   );

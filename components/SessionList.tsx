@@ -21,14 +21,14 @@ import ActivityCards from "./ActivityCards";
 
 interface SessionListProps {
   sessionData: TrainingSession[];
-  API_ENDPOINT: string;
+  API_BASE: string;
   mutate: KeyedMutator<TrainingSession[]>;
   date: Date;
 }
 
 const SessionList = ({
   sessionData,
-  API_ENDPOINT,
+  API_BASE,
   mutate,
   date,
 }: SessionListProps) => {
@@ -50,7 +50,7 @@ const SessionList = ({
   };
   const handleDeleteSession = async (id: string) => {
     try {
-      const isSuccess = await mutateFetcher(API_ENDPOINT, "DELETE", id);
+      const isSuccess = await mutateFetcher(API_BASE, "DELETE", id);
       mutate(); // 再重新驗證
       if (isSuccess) toast.success("刪除訓練成功");
     } catch (error) {
@@ -59,6 +59,10 @@ const SessionList = ({
       console.error(error);
     }
   };
+
+  const filterActivityData = (id: string) =>
+    sessionData.filter((item) => item.id === id)[0].activities;
+
   return (
     <>
       <Accordion type="multiple">
@@ -89,7 +93,12 @@ const SessionList = ({
                   </ButtonGroup>
                 </div>
                 <AccordionContent className="px-8 space-y-4">
-                  <ActivityCards note={item.note} id={item.id}  />
+                  <ActivityCards
+                    note={item.note}
+                    id={item.id}
+                    mutate={mutate}
+                    activityData={filterActivityData(item.id)}
+                  />
                 </AccordionContent>
               </AccordionItem>
             ))
@@ -115,6 +124,7 @@ const SessionList = ({
         setIsOpen={setIsDeleteDialogOpen}
         id={selectedSessionId}
         handleDelete={handleDeleteSession}
+        type="訓練計畫"
       />
     </>
   );
