@@ -32,7 +32,7 @@ interface SetVolumeDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   activityName: string;
-  setActivityRecord: Dispatch<SetStateAction<ActivityRecord[]>>;
+  setActivityRecordTemp: Dispatch<SetStateAction<ActivityRecord[]>>;
   selectedSetData?: SelectedSetData | null;
   setSelectedSetData?: Dispatch<SetStateAction<SelectedSetData | null>>;
 }
@@ -46,7 +46,7 @@ const SetVolumeDialog = ({
   isOpen,
   setIsOpen,
   activityName,
-  setActivityRecord,
+  setActivityRecordTemp,
   selectedSetData,
   setSelectedSetData,
 }: SetVolumeDialogProps) => {
@@ -72,7 +72,7 @@ const SetVolumeDialog = ({
 
   function onSubmit(data: z.infer<typeof formSchema>) {
     if (isEditMode) {
-      setActivityRecord((prev) =>
+      setActivityRecordTemp((prev) =>
         prev.map((item) => {
           if (item.id === selectedSetData.id) {
             return {
@@ -85,7 +85,7 @@ const SetVolumeDialog = ({
         })
       );
     } else {
-      setActivityRecord((prev) => [
+      setActivityRecordTemp((prev) => [
         ...prev,
         {
           id: uuidv4(),

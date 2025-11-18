@@ -61,6 +61,7 @@ const ActivityCards = ({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedActivityId, setSelectedActivityId] = useState("");
   const [isResetVolume, setIsResetVolume] = useState(false);
+  const [isTrainingCardOpen, setIsTrainingCardOpen] = useState(false);
 
   const handleCancelActivity = () => {
     setActivityCategory("");
@@ -107,14 +108,12 @@ const ActivityCards = ({
         }
       );
 
-      const data = await response.json();
-      console.log(data);
-
       if (response.ok) {
         mutate();
         setActivityName("");
         setActivityCategory("");
         setActivityRecordTemp([]);
+        setIsTrainingCardOpen(false)
         toast.success("建立資料成功");
       } else {
         toast.warning("建立資料失敗");
@@ -144,6 +143,24 @@ const ActivityCards = ({
     }
   };
 
+  // 編輯訓練量資料
+  const handleResetVolume = (
+    selectedActivityId: string,
+    activityRecord: ActivityRecord[]
+  ) => {
+    setActivityRecordTemp(activityRecord);
+    setSelectedActivityId(selectedActivityId);
+    setIsResetVolume(true);
+  };
+
+  // 取消編輯訓練量資料
+  const handleResetVolumeCancel = () => {
+    setActivityRecordTemp([]);
+    setSelectedActivityId("");
+    setIsResetVolume(false);
+  };
+console.log(activityData);
+
   return (
     <div>
       <div className="space-y-4 my-4">
@@ -157,6 +174,8 @@ const ActivityCards = ({
           handleSetVolume={handleSetVolume}
           handleActivityRecordTempDelete={handleActivityRecordTempDelete}
           handleActivitySubmit={handleActivitySubmit}
+          isTrainingCardOpen={isTrainingCardOpen}
+          setIsTrainingCardOpen={setIsTrainingCardOpen}
         />
         {activityData.length > 0 ? (
           activityData.map((activity) => (
@@ -180,11 +199,11 @@ const ActivityCards = ({
                   </CardHeader>
                   <AccordionContent>
                     <CardContent>
-                      {isResetVolume ? (
+                      {isResetVolume && selectedActivityId === activity.id ? (
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => setIsResetVolume(false)}
+                          onClick={() => handleResetVolumeCancel()}
                         >
                           <X />
                         </Button>
@@ -192,13 +211,18 @@ const ActivityCards = ({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => setIsResetVolume(true)}
+                          onClick={() =>
+                            handleResetVolume(
+                              activity.id,
+                              activity.records
+                            )
+                          }
                         >
                           <SlidersHorizontal />
                         </Button>
                       )}
                       <div className="space-y-8 my-4">
-                        {activity.activity_records.map((record) => (
+                        {activity.records.map((record) => (
                           <div
                             key={record.id}
                             className="flex justify-around items-center"
@@ -212,30 +236,38 @@ const ActivityCards = ({
                               <p>Reps</p>
                               <p>{record.repetition}</p>
                             </div>
-                            {isResetVolume && (
-                              <ButtonGroup>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => console.log("編輯", record.id)}
-                                >
-                                  <SquarePen />
-                                </Button>
-                                <Button
-                                  className="hover:bg-red-600 hover:text-white"
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => console.log("刪除", record.id)}
-                                >
-                                  <Trash2 />
-                                </Button>
-                              </ButtonGroup>
-                            )}
+                            {isResetVolume &&
+                              selectedActivityId === activity.id && (
+                                <ButtonGroup>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      handleSetVolume(
+                                        record.id,
+                                        record.set_number
+                                      )
+                                    }
+                                  >
+                                    <SquarePen />
+                                  </Button>
+                                  <Button
+                                    className="hover:bg-red-600 hover:text-white"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      console.log("刪除", record.id)
+                                    }
+                                  >
+                                    <Trash2 />
+                                  </Button>
+                                </ButtonGroup>
+                              )}
                           </div>
                         ))}
                       </div>
                     </CardContent>
-                    {isResetVolume && (
+                    {isResetVolume && selectedActivityId === activity.id && (
                       <CardFooter>
                         <Button className="w-full">儲存</Button>
                       </CardFooter>
@@ -265,13 +297,13 @@ const ActivityCards = ({
         isOpen={isVolumeDialogOpen}
         setIsOpen={setIsVolumeDialogOpen}
         activityName={activityName}
-        setActivityRecord={setActivityRecordTemp}
+        setActivityRecordTemp={setActivityRecordTemp}
       />
       <SetVolumeDialog
         activityName={activityName}
         isOpen={isSetVolumeDialog}
         setIsOpen={setIsSetVolumeDialog}
-        setActivityRecord={setActivityRecordTemp}
+        setActivityRecordTemp={setActivityRecordTemp}
         selectedSetData={selectedSetData}
         setSelectedSetData={setSelectedSetData}
       />

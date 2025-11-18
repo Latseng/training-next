@@ -1,15 +1,19 @@
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+import camelcaseKeys from "camelcase-keys";
 
-export const fetcher = async (url: string) =>
-  fetch(`${API_URL}${url}`, {
-    credentials: "include",
-  }).then((response) => {
-    // 錯誤處理
+export const API_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
+export const fetcher = async (url: string) => {
+  const response = await fetch(`${API_URL}${url}`, {
+    credentials: "include"})
     if (!response.ok) {
       throw new Error("An error occurred while fetching the data.");
     }
-    return response.json();
-  });
+    const data = await response.json();
+    const camelCasedData = camelcaseKeys(data, { deep: true });
+
+    return camelCasedData;
+}
 
 export async function mutateFetcher(
   endpoint: string,
@@ -30,6 +34,6 @@ export async function mutateFetcher(
   if (!response.ok) {
     throw new Error("An error occurred while fetching the data.");
   } else {
-    return true
+    return true;
   }
 }

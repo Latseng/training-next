@@ -9,7 +9,6 @@ import {
 import { Plus, SlidersHorizontal, SquarePen, Trash2, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { ButtonGroup } from "./ui/button-group";
-import { useState } from "react";
 import { ActivityRecord } from "@/lib/types";
 
 interface TempActivityCardProps {
@@ -22,6 +21,8 @@ interface TempActivityCardProps {
   handleSetVolume: (id: string, set: number) => void;
   handleActivityRecordTempDelete: (id: string) => void;
   handleActivitySubmit: () => void;
+  isTrainingCardOpen: boolean
+  setIsTrainingCardOpen: (open: boolean) => void;
 }
 
 const TempActivityCard = ({
@@ -34,8 +35,9 @@ const TempActivityCard = ({
   handleSetVolume,
   handleActivityRecordTempDelete,
   handleActivitySubmit,
+  isTrainingCardOpen,
+  setIsTrainingCardOpen,
 }: TempActivityCardProps) => {
-  const [isTrainingCardOpen, setIsTrainingCardOpen] = useState(false);
   return (
     <>
       {isTrainingCardOpen ? (

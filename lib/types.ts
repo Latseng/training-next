@@ -23,7 +23,7 @@ export interface TrainingActivity {
   name: string;
   category: string;
   description: string;
-  activity_records: ActivityRecord[]
+  records: ActivityRecord[]
 }
 
 export interface ActivityRecord {

@@ -26,7 +26,7 @@ interface TainingVolumeDialogProps {
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
   activityName: string;
-  setActivityRecord: Dispatch<SetStateAction<ActivityRecord[]>>;
+  setActivityRecordTemp: Dispatch<SetStateAction<ActivityRecord[]>>;
 }
 
 const formSchema = z.object({
@@ -39,7 +39,7 @@ const TrainingRecordDialog = ({
   isOpen,
   setIsOpen,
   activityName,
-  setActivityRecord,
+  setActivityRecordTemp,
 }: TainingVolumeDialogProps) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -57,7 +57,8 @@ const TrainingRecordDialog = ({
         repetition: data.repetition,
       };
     });
-    setActivityRecord(recordsData);
+    
+    setActivityRecordTemp(recordsData);
     form.reset();
   }
 
