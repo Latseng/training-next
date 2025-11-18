@@ -89,7 +89,7 @@ const SetVolumeDialog = ({
         ...prev,
         {
           id: uuidv4(),
-          set: prev.length + 1,
+          setNumber: prev.length + 1,
           weight: data.weight,
           repetition: data.repetition,
         },

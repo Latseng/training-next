@@ -13,12 +13,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "./ui/button";
-import { SlidersHorizontal, SquarePen, Trash2, X } from "lucide-react";
+import { SlidersHorizontal, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import TrainingActivityDialog from "./TrainingActivityDialog";
 import ActivityRecordDialog from "./ActivityRecordDialog";
 import { ActivityRecord, TrainingActivity } from "@/lib/types";
-import { ButtonGroup } from "./ui/button-group";
 import SetVolumeDialog from "./SetVolumeDialog";
 import { toast } from "sonner";
 
@@ -27,6 +26,8 @@ import { TrainingSession } from "@/lib/types";
 import DeleteDialog from "./DeleteDialog";
 import { mutateFetcher } from "@/lib/fetcher";
 import TempActivityCard from "./TempActivityCard";
+import TempActivityRecordList from "./TempActivityRecordList";
+import { Spinner } from "./ui/spinner";
 
 interface ActivityCardsProps {
   note: string;
@@ -62,6 +63,7 @@ const ActivityCards = ({
   const [selectedActivityId, setSelectedActivityId] = useState("");
   const [isResetVolume, setIsResetVolume] = useState(false);
   const [isTrainingCardOpen, setIsTrainingCardOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleCancelActivity = () => {
     setActivityCategory("");
@@ -159,24 +161,68 @@ const ActivityCards = ({
     setSelectedActivityId("");
     setIsResetVolume(false);
   };
-console.log(activityData);
+
+const handleRecordEditSubmit = async () => {
+  setIsSubmitting(true)
+  const activityRecordsPayload = activityRecordTemp.map((item, index) => ({
+    id: item.id,
+    activity_id: item.activityId,
+    set_number: index + 1,
+    weight: item.weight,
+    repetition: item.repetition,
+  }));
+  console.log(selectedActivityId, activityRecordsPayload);
+
+  try {
+    const res = await fetch(
+      `http://localhost:8000/api/training-activities/${selectedActivityId}/records`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(activityRecordsPayload),
+      }
+    );
+
+    mutate();
+
+    if (res.ok) {
+      toast.success("編輯訓練紀錄成功");
+    } else {
+      toast.warning("編輯失敗");
+    }
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setActivityRecordTemp([]);
+    setSelectedActivityId("");
+    setIsResetVolume(false);
+    setIsSubmitting(false);
+  }
+  
+}
 
   return (
     <div>
       <div className="space-y-4 my-4">
-        <TempActivityCard
-          setIsActivityDialogOpen={setIsActivityDialogOpen}
-          activityName={activityName}
-          activityRecordTemp={activityRecordTemp}
-          setIsSetVolumeDialog={setIsSetVolumeDialog}
-          setIsVolumeDialogOpen={setIsVolumeDialogOpen}
-          handleCancelActivity={handleCancelActivity}
-          handleSetVolume={handleSetVolume}
-          handleActivityRecordTempDelete={handleActivityRecordTempDelete}
-          handleActivitySubmit={handleActivitySubmit}
-          isTrainingCardOpen={isTrainingCardOpen}
-          setIsTrainingCardOpen={setIsTrainingCardOpen}
-        />
+        {/* 條件渲染：以免訓練量（未送到後端儲存）資料互相影響 */}
+        {!isResetVolume && (
+          <TempActivityCard
+            setIsActivityDialogOpen={setIsActivityDialogOpen}
+            activityName={activityName}
+            activityRecordTemp={activityRecordTemp}
+            setIsSetVolumeDialog={setIsSetVolumeDialog}
+            setIsVolumeDialogOpen={setIsVolumeDialogOpen}
+            handleCancelActivity={handleCancelActivity}
+            handleSetVolume={handleSetVolume}
+            handleActivityRecordTempDelete={handleActivityRecordTempDelete}
+            handleActivitySubmit={handleActivitySubmit}
+            isTrainingCardOpen={isTrainingCardOpen}
+            setIsTrainingCardOpen={setIsTrainingCardOpen}
+          />
+        )}
         {activityData.length > 0 ? (
           activityData.map((activity) => (
             <Card key={activity.id}>
@@ -186,90 +232,83 @@ console.log(activityData);
                     <AccordionTrigger>
                       <CardTitle>{activity.name}</CardTitle>
                     </AccordionTrigger>
-                    <CardAction>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="hover:bg-red-600 hover:text-white"
-                        onClick={() => handleDeleteDialog(activity.id)}
-                      >
-                        <Trash2 />
-                      </Button>
-                    </CardAction>
-                  </CardHeader>
-                  <AccordionContent>
-                    <CardContent>
-                      {isResetVolume && selectedActivityId === activity.id ? (
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleResetVolumeCancel()}
-                        >
-                          <X />
-                        </Button>
-                      ) : (
+                    {!isTrainingCardOpen && (
+                      <CardAction>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() =>
-                            handleResetVolume(
-                              activity.id,
-                              activity.records
-                            )
-                          }
+                          className="hover:bg-red-600 hover:text-white"
+                          onClick={() => handleDeleteDialog(activity.id)}
                         >
-                          <SlidersHorizontal />
+                          <Trash2 />
                         </Button>
+                      </CardAction>
+                    )}
+                  </CardHeader>
+                  <AccordionContent>
+                    <CardContent>
+                      {/* 條件渲染：以免訓練量（未送到後端儲存）資料互相影響 */}
+                      {!isTrainingCardOpen && (
+                        <>
+                          {isResetVolume &&
+                          selectedActivityId === activity.id ? (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleResetVolumeCancel()}
+                            >
+                              <X />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                handleResetVolume(activity.id, activity.records)
+                              }
+                            >
+                              <SlidersHorizontal />
+                            </Button>
+                          )}
+                        </>
                       )}
                       <div className="space-y-8 my-4">
-                        {activity.records.map((record) => (
-                          <div
-                            key={record.id}
-                            className="flex justify-around items-center"
-                          >
-                            <p>Set：{record.set_number}</p>
-                            <div className="text-center space-y-2">
-                              <p>Weight</p>
-                              <p>{record.weight}</p>
+                        {isResetVolume && selectedActivityId === activity.id ? (
+                          <TempActivityRecordList
+                            activityRecordTemp={activityRecordTemp}
+                            handleSetVolume={handleSetVolume}
+                            handleActivityRecordTempDelete={
+                              handleActivityRecordTempDelete
+                            }
+                          />
+                        ) : (
+                          activity.records.map((record) => (
+                            <div
+                              key={record.id}
+                              className="flex justify-around items-center"
+                            >
+                              <p>Set：{record.setNumber}</p>
+                              <div className="text-center space-y-2">
+                                <p>Weight</p>
+                                <p>{record.weight}</p>
+                              </div>
+                              <div className="text-center space-y-2">
+                                <p>Reps</p>
+                                <p>{record.repetition}</p>
+                              </div>
                             </div>
-                            <div className="text-center space-y-2">
-                              <p>Reps</p>
-                              <p>{record.repetition}</p>
-                            </div>
-                            {isResetVolume &&
-                              selectedActivityId === activity.id && (
-                                <ButtonGroup>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() =>
-                                      handleSetVolume(
-                                        record.id,
-                                        record.set_number
-                                      )
-                                    }
-                                  >
-                                    <SquarePen />
-                                  </Button>
-                                  <Button
-                                    className="hover:bg-red-600 hover:text-white"
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() =>
-                                      console.log("刪除", record.id)
-                                    }
-                                  >
-                                    <Trash2 />
-                                  </Button>
-                                </ButtonGroup>
-                              )}
-                          </div>
-                        ))}
+                          ))
+                        )}
                       </div>
                     </CardContent>
                     {isResetVolume && selectedActivityId === activity.id && (
                       <CardFooter>
-                        <Button className="w-full">儲存</Button>
+                        <Button
+                          disabled={isSubmitting}
+                          onClick={() => handleRecordEditSubmit()}
+                        >
+                          {isSubmitting ? <Spinner /> : ("儲存")}
+                        </Button>
                       </CardFooter>
                     )}
                   </AccordionContent>

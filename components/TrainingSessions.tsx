@@ -40,7 +40,7 @@ const TrainingSessions = () => {
   };
 
   return (
-    <div className="px-4 md:py-4">
+    <div className="md:px-4 md:py-4">
       <div className="flex flex-col items-center">
         <h2 className="mb-4 text-2xl">
           訓練日
