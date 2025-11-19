@@ -28,7 +28,7 @@ export interface TrainingActivity {
 
 export interface ActivityRecord {
   id: string;
-  setNumber: number;
+  setNumber?: number;
   activityId?: string;
   weight: number;
   repetition: number;
