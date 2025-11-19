@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { API_URL } from "./lib/fetcher";
 
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // 公開路徑 (白名單)：只有這些頁面是未登入者可以訪問的
+const API_STATUS_ENDPOINT = `${API_URL}/auth/users/me`
+// 公開路徑 (白名單)：只有這些頁面是未登入者可以訪問的
   const publicPaths = ["/login", "/signup"];
+
+export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
 
   // 判斷當前路徑是否為公開路徑
   const isPublicPath = publicPaths.includes(pathname);
@@ -13,13 +15,28 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
 
   if (token && isPublicPath) {
-    return NextResponse.redirect(new URL("/", request.url));
+    try {
+      const response = await fetch(API_STATUS_ENDPOINT, {
+        headers: request.headers,
+      });
+
+      if (response.status === 200) {
+        // 登入狀態無效，重定向到登入頁
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+      // 狀態 OK (200)，允許繼續
+      return NextResponse.next();
+    } catch (err) {
+      // 網路錯誤或其他異常，重定向
+      console.error(err);
+      
+      return NextResponse.redirect(new URL("/login", request.url));
+    }
   }
   
   if (!token && !isPublicPath) {
 
     const loginUrl = new URL("/login", request.url);
-    // 避免 redirect loop，確保不會一直重複添加參數 (雖非必須但較乾淨)
     loginUrl.searchParams.set("from", pathname);
 
     return NextResponse.redirect(loginUrl);
