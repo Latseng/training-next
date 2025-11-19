@@ -19,7 +19,7 @@ import TrainingSessionDialog from "./TrainingSessionDialog";
 import { fetcher } from "@/lib/fetcher";
 import SessionList from "./SessionList";
 
-const API_BASE = "/api/training-sessions";
+const API_ENDPOINT = "/training-sessions";
 
 const TrainingSessions = () => {
    const [date, setDate] = useState<Date>(new Date());
@@ -27,8 +27,9 @@ const TrainingSessions = () => {
 
   params.append("start_date", format(date, "yyyy-MM-dd"));
 
-  const swrKey = `${API_BASE}/with-activities?${params.toString()}`;
+  const swrKey = `${API_ENDPOINT}/with-activities?${params.toString()}`;
   const { data, mutate } = useSWR(swrKey, fetcher);
+  
   const [isTrainingSessionDialog, setIsTrainingSessionDialog] = useState(false);
 
   const formatDateDisplay = (selectedDate: Date) => {
@@ -43,11 +44,11 @@ const TrainingSessions = () => {
     <div className="md:px-4 md:py-4">
       <div className="flex flex-col items-center">
         <h2 className="mb-4 text-2xl">
-          訓練日
           <Popover>
             <PopoverTrigger className="mx-2" asChild>
               <Button variant="outline" size="lg" className="text-xl">
                 <CalendarIcon />
+                {formatDateDisplay(date)}
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-0">
@@ -58,7 +59,6 @@ const TrainingSessions = () => {
               />
             </PopoverContent>
           </Popover>
-          {formatDateDisplay(date)}
         </h2>
         <Button
           className="text-blue-700 hover:text-blue-900"
@@ -81,7 +81,7 @@ const TrainingSessions = () => {
       </div>
       <SessionList
         sessionData={data}
-        API_BASE={API_BASE}
+        API_ENDPOINT={API_ENDPOINT}
         mutate={mutate}
         date={date}
       />

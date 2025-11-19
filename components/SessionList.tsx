@@ -21,14 +21,14 @@ import ActivityCards from "./ActivityCards";
 
 interface SessionListProps {
   sessionData: TrainingSession[];
-  API_BASE: string;
+  API_ENDPOINT: string;
   mutate: KeyedMutator<TrainingSession[]>;
   date: Date;
 }
 
 const SessionList = ({
   sessionData,
-  API_BASE,
+  API_ENDPOINT,
   mutate,
   date,
 }: SessionListProps) => {
@@ -50,7 +50,7 @@ const SessionList = ({
   };
   const handleDeleteSession = async (id: string) => {
     try {
-      const isSuccess = await mutateFetcher(API_BASE, "DELETE", id);
+      const isSuccess = await mutateFetcher(API_ENDPOINT, "DELETE", id);
       mutate(); // 再重新驗證
       if (isSuccess) toast.success("刪除訓練成功");
     } catch (error) {
@@ -65,7 +65,7 @@ const SessionList = ({
 
   return (
     <>
-      <Accordion type="multiple">
+      <Accordion type="multiple" className="px-2 md:px-0">
         {sessionData ? (
           sessionData.length > 0 ? (
             sessionData.map((item, index) => (

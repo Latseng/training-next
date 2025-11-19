@@ -26,6 +26,7 @@ import { format } from "date-fns";
 
 import type { KeyedMutator } from "swr";
 import { TrainingSession } from "@/lib/types";
+import { API_URL } from "@/lib/fetcher";
 
 interface TrainingSessionDialogProps {
   isOpen: boolean;
@@ -82,7 +83,7 @@ const TrainingSessionDialog = ({
       ...formData,
     };
 
-    let url = "http://localhost:8000/api/training-sessions";
+    let url = `${API_URL}/training-sessions`;
     let method = "POST";
     let successMessage = "建立訓練成功！";
 

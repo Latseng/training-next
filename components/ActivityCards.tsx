@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import type { KeyedMutator } from "swr";
 import { TrainingSession } from "@/lib/types";
 import DeleteDialog from "./DeleteDialog";
-import { mutateFetcher } from "@/lib/fetcher";
+import { API_URL, mutateFetcher } from "@/lib/fetcher";
 import TempActivityCard from "./TempActivityCard";
 import TempActivityRecordList from "./TempActivityRecordList";
 import { Spinner } from "./ui/spinner";
@@ -99,7 +99,7 @@ const ActivityCards = ({
 
     try {
       const response = await fetch(
-        "http://localhost:8000/api/training-activities",
+        `${API_URL}/training-activities`,
         {
           method: "POST",
           headers: {
@@ -133,7 +133,7 @@ const ActivityCards = ({
   const handleDeleteActivity = async (id: string) => {
     try {
       const isSuccess = await mutateFetcher(
-        "/api/training-activities",
+        "/training-activities",
         "DELETE",
         id
       );
@@ -171,11 +171,10 @@ const handleRecordEditSubmit = async () => {
     weight: item.weight,
     repetition: item.repetition,
   }));
-  console.log(selectedActivityId, activityRecordsPayload);
 
   try {
     const res = await fetch(
-      `http://localhost:8000/api/training-activities/${selectedActivityId}/records`,
+      `${API_URL}/training-activities/${selectedActivityId}/records`,
       {
         method: "PUT",
         headers: {
