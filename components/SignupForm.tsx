@@ -80,7 +80,9 @@ export function SignupForm() {
         throw new Error(data.detail || "註冊失敗");
       } else {
         toast.success("註冊成功！請先至Email收確認信！");
-        router.push("/login");
+        router.push(
+          `/auth/signup/verify-email?email=${encodeURIComponent(data.email)}`
+        );
       }
     } catch (err: unknown) {
       console.error(err);
@@ -203,7 +205,7 @@ export function SignupForm() {
                 </Button>
               </Field>
               <FieldDescription className="text-center">
-                已經註冊過了？ <a href="/login">登入</a>
+                已經註冊過了？ <a href="/auth/login">登入</a>
               </FieldDescription>
             </FieldGroup>
           </form>

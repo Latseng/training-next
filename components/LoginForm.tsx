@@ -144,7 +144,7 @@ export function LoginForm() {
                 </Button>
               </Field>
               <FieldDescription className="text-center">
-                沒有帳號嗎？ <a href="/signup">註冊</a> 以保存您的訓練歷程
+                沒有帳號嗎？ <a href="/auth/signup">註冊</a> 以保存您的訓練歷程
               </FieldDescription>
             </FieldGroup>
           </form>

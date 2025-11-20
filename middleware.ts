@@ -4,7 +4,12 @@ import { API_PROXY } from "./lib/fetcher";
 
 const API_STATUS_ENDPOINT = `${API_PROXY}/auth/users/me`
 // 公開路徑 (白名單)：只有這些頁面是未登入者可以訪問的
-const publicPaths = ["/login", "/signup"];
+const publicPaths = [
+  "/auth/login",
+  "/auth/signup",
+  "/auth/signup/verify-email",
+  "/auth/callback",
+];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -29,13 +34,13 @@ export async function middleware(request: NextRequest) {
     } catch (err) {
       console.error(err);
       
-      return NextResponse.redirect(new URL("/login", request.url));
+      return NextResponse.redirect(new URL("/auth/login", request.url));
     }
   }
   
   if (!token && !isPublicPath) {
 
-    const loginUrl = new URL("/login", request.url);
+    const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("from", pathname);
 
     return NextResponse.redirect(loginUrl);
