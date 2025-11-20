@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import type { KeyedMutator } from "swr";
 import { TrainingSession } from "@/lib/types";
 import DeleteDialog from "./DeleteDialog";
-import { API_URL, mutateFetcher } from "@/lib/fetcher";
+import { API_PROXY, mutateFetcher } from "@/lib/fetcher";
 import TempActivityCard from "./TempActivityCard";
 import TempActivityRecordList from "./TempActivityRecordList";
 import { Spinner } from "./ui/spinner";
@@ -99,7 +99,7 @@ const ActivityCards = ({
 
     try {
       const response = await fetch(
-        `${API_URL}/training-activities`,
+        `${API_PROXY}/training-activities`,
         {
           method: "POST",
           headers: {
@@ -174,7 +174,7 @@ const handleRecordEditSubmit = async () => {
 
   try {
     const res = await fetch(
-      `${API_URL}/training-activities/${selectedActivityId}/records`,
+      `${API_PROXY}/training-activities/${selectedActivityId}/records`,
       {
         method: "PUT",
         headers: {

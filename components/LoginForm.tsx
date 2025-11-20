@@ -18,7 +18,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import SubmitButton from "./SubmitButton";
-import { API_URL } from "@/lib/fetcher";
 
 const formSchema = z.object({
   email: z.email({

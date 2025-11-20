@@ -6,7 +6,7 @@ import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import Image from "next/image";
-import { API_URL } from "@/lib/fetcher";
+import { API_PROXY } from "@/lib/fetcher";
 
 const LOGO_PATH = "/training-logo.png";
 
@@ -15,7 +15,7 @@ const Header = () => {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch(`${API_URL}/auth/logout`, {
+      const res = await fetch(`${API_PROXY}/auth/logout`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",

@@ -1,10 +1,11 @@
 import camelcaseKeys from "camelcase-keys";
 
-export const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+// export const API_URL =
+//   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+export const API_PROXY = "/api/proxy";
 
 export const fetcher = async (url: string) => {
-  const response = await fetch(`${API_URL}${url}`, {
+  const response = await fetch(`${API_PROXY}${url}`, {
     credentials: "include"})
     if (!response.ok) {
       throw new Error("An error occurred while fetching the data.");
@@ -21,7 +22,7 @@ export async function mutateFetcher(
   id = "",
   payload = {}
 ) {
-  const response = await fetch(`${API_URL}${endpoint}/${id}`, {
+  const response = await fetch(`${API_PROXY}${endpoint}/${id}`, {
     method,
     credentials: "include",
     headers: {

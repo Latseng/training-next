@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { API_URL } from "./lib/fetcher";
+import { API_PROXY } from "./lib/fetcher";
 
-const API_STATUS_ENDPOINT = `${API_URL}/auth/users/me`
+const API_STATUS_ENDPOINT = `${API_PROXY}/auth/users/me`
 // 公開路徑 (白名單)：只有這些頁面是未登入者可以訪問的
 const publicPaths = ["/login", "/signup"];
 
