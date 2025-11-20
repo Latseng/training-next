@@ -1,9 +1,9 @@
-import TrainingPrograms from "@/components/TrainingSessions";
+import TrainingSessions from "@/components/TrainingSessions";
 
-export default async function Home() {
+export default function Home() {
   return (
     <main>
-      <TrainingPrograms />
+      <TrainingSessions />
     </main>
   );
 }

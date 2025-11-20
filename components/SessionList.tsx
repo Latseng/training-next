@@ -65,7 +65,7 @@ const SessionList = ({
 
   return (
     <>
-      <Accordion type="multiple" className="px-2 md:px-0">
+      <Accordion type="multiple" className="px-4 md:px-8">
         {sessionData ? (
           sessionData.length > 0 ? (
             sessionData.map((item, index) => (
@@ -103,7 +103,7 @@ const SessionList = ({
               </AccordionItem>
             ))
           ) : (
-            <h3 className="m-4 text-center font-bold">還沒有建立訓練計劃...</h3>
+            <p className="my-8 text-center font-semibold text-xl">還未建立訓練計劃...</p>
           )
         ) : (
           <div className="space-y-2">

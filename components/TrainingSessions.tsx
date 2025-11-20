@@ -2,10 +2,11 @@
 
 import useSWR from "swr";
 import { Button } from "@/components/ui/button";
-import { SquarePlus } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { Calendar } from "@/components/ui/calendar";
 import { isSameDay, format } from "date-fns";
+import { zhTW } from "date-fns/locale";
 
 import {
   Popover,
@@ -42,10 +43,10 @@ const TrainingSessions = () => {
 
   return (
     <div className="md:px-4 md:py-4">
-      <div className="flex flex-col items-center">
-        <h2 className="mb-4 text-2xl">
+      <div className="flex flex-col items-center my-4">
+        <div className="space-x-4">
           <Popover>
-            <PopoverTrigger className="mx-2" asChild>
+            <PopoverTrigger asChild>
               <Button variant="outline" size="lg" className="text-xl">
                 <CalendarIcon />
                 {formatDateDisplay(date)}
@@ -56,34 +57,27 @@ const TrainingSessions = () => {
                 mode="single"
                 selected={date}
                 onSelect={(newDate) => newDate && setDate(newDate)}
+                locale={zhTW}
               />
             </PopoverContent>
           </Popover>
-        </h2>
-        <Button
-          className="text-blue-700 hover:text-blue-900"
-          onClick={() => setIsTrainingSessionDialog(true)}
-          variant="ghost"
-          size="icon-2xl"
-          asChild
-        >
-          <SquarePlus strokeWidth={1.2} />
-        </Button>
-        <p className="text-gray-500 font-semibold text-lg md:text-xl">
-          新增訓練
-        </p>
-        <TrainingSessionDialog
-          isOpen={isTrainingSessionDialog}
-          setIsOpen={setIsTrainingSessionDialog}
-          date={date}
-          mutate={mutate}
-        />
+          <Button onClick={() => setIsTrainingSessionDialog(true)}>
+            <Plus />
+            新增訓練計畫
+          </Button>
+        </div>
       </div>
       <SessionList
         sessionData={data}
         API_ENDPOINT={API_ENDPOINT}
         mutate={mutate}
         date={date}
+      />
+      <TrainingSessionDialog
+        isOpen={isTrainingSessionDialog}
+        setIsOpen={setIsTrainingSessionDialog}
+        date={date}
+        mutate={mutate}
       />
     </div>
   );
