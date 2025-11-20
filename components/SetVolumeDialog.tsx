@@ -111,7 +111,6 @@ const SetVolumeDialog = ({
       // Dialog 關閉時重置表單
       
       if(setSelectedSetData){
-        console.log("清空選擇資料");
         setSelectedSetData(null)
       }
       form.reset({
