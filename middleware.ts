@@ -4,7 +4,7 @@ import { API_URL } from "./lib/fetcher";
 
 const API_STATUS_ENDPOINT = `${API_URL}/auth/users/me`
 // 公開路徑 (白名單)：只有這些頁面是未登入者可以訪問的
-  const publicPaths = ["/login", "/signup"];
+const publicPaths = ["/login", "/signup"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

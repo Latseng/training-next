@@ -29,6 +29,8 @@ const formSchema = z.object({
   }),
 });
 
+const API_PROXY = "/api/proxy";
+
 export function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +53,7 @@ export function LoginForm() {
     };
 
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
+      const res = await fetch(`${API_PROXY}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
