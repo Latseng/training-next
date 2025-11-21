@@ -82,7 +82,7 @@ const TrainingActivityDialog = ({
           <DialogDescription>設定動作項目</DialogDescription>
         </DialogHeader>
         {activityCategory === "" && (
-          <div className="flex justify-center gap-8">
+          <div className="flex flex-wrap justify-center gap-4">
             <Button onClick={() => setActivityCategory("strength")}>
               肌力
             </Button>
