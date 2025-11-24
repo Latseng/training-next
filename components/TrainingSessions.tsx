@@ -2,7 +2,7 @@
 
 import useSWR from "swr";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { ChartLine, Plus } from "lucide-react";
 
 import { Calendar } from "@/components/ui/calendar";
 import { isSameDay, format } from "date-fns";
@@ -19,11 +19,12 @@ import { useState } from "react";
 import TrainingSessionDialog from "./TrainingSessionDialog";
 import { fetcher } from "@/lib/fetcher";
 import SessionList from "./SessionList";
+import Link from "next/link";
 
 const API_ENDPOINT = "/training-sessions";
 
 const TrainingSessions = () => {
-   const [date, setDate] = useState<Date>(new Date());
+  const [date, setDate] = useState<Date>(new Date());
   const params = new URLSearchParams();
 
   params.append("start_date", format(date, "yyyy-MM-dd"));
@@ -42,9 +43,15 @@ const TrainingSessions = () => {
   };
 
   return (
-    <div className="md:px-4 md:py-4">
+    <div className="md:px-4 md:py-2">
       <div className="flex flex-col items-center my-4">
         <div className="space-x-4">
+          <Button variant="outline" asChild>
+            <Link href="/analysis">
+              <ChartLine />
+              分析
+            </Link>
+          </Button>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" size="lg" className="text-xl">
