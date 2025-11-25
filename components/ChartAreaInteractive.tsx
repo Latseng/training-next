@@ -1,11 +1,9 @@
 "use client";
 
-import * as React from "react";
 import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
 
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -30,6 +28,18 @@ import {
 import { subDays } from "date-fns";
 import { RangeRecord } from "@/lib/utils";
 import { Button } from "./ui/button";
+import { BotMessageSquare, Check, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ChatBox } from "./ChatBox";
+import { ChatInput } from "./ChatInput";
+import { useChatStore } from "@/stores/chat-store";
+import { format } from "date-fns";
+
+import { API_PROXY } from "@/lib/fetcher";
+
+import { v4 as uuidv4 } from "uuid";
+import { AlertMessageDialog } from "./AlertMessageDialog";
+
 type DateRange = {
   from: Date;
   to: Date;
@@ -37,21 +47,26 @@ type DateRange = {
 
 interface Props {
   chartData: RangeRecord[];
-  setRange: (dateRange: DateRange) => void
+  range: DateRange;
+  setRange: (dateRange: DateRange) => void;
 }
 
-// 2. 使用 Hex 色碼，確保線條一定看得到
 const COLORS = [
-  "#2563eb", // 藍色
-  "#e11d48", // 紅色
-  "#059669", // 綠色
-  "#d97706", // 橘色
-  "#7c3aed", // 紫色
-  "#db2777", // 粉紅
-  "#0891b2", // 青色
+  "#1D4ED8", // 藍
+  "#DC2626", // 紅
+  "#059669", // 綠
+  "#D97706", // 橘
+  "#7C3AED", // 紫
+  "#DB2777", // 粉
+  "#0891B2", // 青
+  "#CA8A04", // 黃/金
+  // 輔助對比色
+  "#BE185D", // 洋紅
+  "#475569", // 灰/中性
+  "#65A30D", // Lime 綠
+  "#92400E", // 棕
 ];
 
-// 3. 定義時間區間選項對應的天數
 const TIME_RANGES = [
   { label: "過去 2 週", days: 14 },
   { label: "過去 1 個月", days: 30 },
@@ -61,10 +76,15 @@ const TIME_RANGES = [
   { label: "過去 3 年", days: 1095 },
 ];
 
-export function ChartAreaInteractive({ chartData, setRange }: Props) {
-  const [days, setDays] = React.useState("14");
+export function ChartAreaInteractive({ chartData, setRange, range }: Props) {
+  const [days, setDays] = useState("14");
+  const [isChatWithAI, setIsChatWithAI] = useState(false);
+  const [hasCarryData, setHasCarryData] = useState(false);
+  const [isReplyLoading, setIsRelyLoading] = useState(false);
+  const [isAlertMessageDialogOpen, setIsAlertMessageDialogOpen] =
+    useState(false);
   const today = new Date();
-  
+
   const handleRangeChange = (dateRange: string) => {
     setDays(dateRange);
 
@@ -73,8 +93,8 @@ export function ChartAreaInteractive({ chartData, setRange }: Props) {
     const to = today;
     setRange({ from, to });
   };
-  
-  const activityKeys = React.useMemo(() => {
+
+  const activityKeys = useMemo(() => {
     const keys = new Set<string>();
     chartData.forEach((item) => {
       Object.keys(item).forEach((key) => {
@@ -85,7 +105,7 @@ export function ChartAreaInteractive({ chartData, setRange }: Props) {
   }, [chartData]);
 
   // 動態生成 Config
-  const chartConfig = React.useMemo(() => {
+  const chartConfig = useMemo(() => {
     const config: ChartConfig = {};
     activityKeys.forEach((key, index) => {
       config[key] = {
@@ -95,6 +115,62 @@ export function ChartAreaInteractive({ chartData, setRange }: Props) {
     });
     return config;
   }, [activityKeys]);
+
+  const { messages, addMessage, updateLoadingMessage } = useChatStore();
+
+  async function handleSend(text: string) {
+    setIsRelyLoading(true);
+    addMessage({ id: uuidv4(), role: "user", content: text });
+
+    const loadingMessageId = uuidv4();
+
+    addMessage({
+      id: loadingMessageId,
+      role: "model",
+      content: "",
+      isLoading: true,
+    });
+
+    const payload: {
+      message: string;
+      range?: { start_date: string; end_date: string };
+    } = {
+      message: text,
+    };
+
+    if (hasCarryData) {
+      const dateRange = {
+        start_date: format(range.from, "yyyy-MM-dd"),
+        end_date: format(range.to, "yyyy-MM-dd"),
+      };
+      payload.range = dateRange;
+    }
+
+    try {
+      const res = await fetch(`${API_PROXY}/analysis/ai/chat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        updateLoadingMessage(loadingMessageId, "發生預期外錯誤！請重新再試");
+        throw new Error("API 請求失敗");
+      }
+
+      const data = await res.json();
+      console.log(data);
+
+      updateLoadingMessage(loadingMessageId, data.reply);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsRelyLoading(false);
+    }
+  }
 
   return (
     <Card>
@@ -123,7 +199,7 @@ export function ChartAreaInteractive({ chartData, setRange }: Props) {
           </SelectContent>
         </Select>
       </CardHeader>
-      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6 space-y-4">
         <ChartContainer
           config={chartConfig}
           className="aspect-auto h-[250px] w-full"
@@ -175,16 +251,11 @@ export function ChartAreaInteractive({ chartData, setRange }: Props) {
               <Area
                 key={key}
                 dataKey={key}
-                type="monotone" // 建議用 monotone，連線會比較自然
+                type="monotone"
                 fill={`url(#fill${key})`}
                 stroke={chartConfig[key]?.color}
                 strokeWidth={2}
-                // 【重點 1】：移除 stackId="a"
-                // stackId="a"  <-- 刪除這行
-
-                // 【重點 2】：加入 connectNulls
                 connectNulls={true}
-                // 為了讓重疊時看得清楚，可以設定這行，讓該 Area 稍微浮在上方 (這行非必要，看視覺效果)
                 fillOpacity={0.4}
               />
             ))}
@@ -195,7 +266,49 @@ export function ChartAreaInteractive({ chartData, setRange }: Props) {
             />
           </AreaChart>
         </ChartContainer>
+        <div className="flex justify-between">
+          {isChatWithAI ? (
+            <Button size="sm" variant="ghost" onClick={() => setIsChatWithAI(false)}>
+              <X />
+              取消對談
+            </Button>
+          ) : (
+            <Button onClick={() => setIsAlertMessageDialogOpen(true)}>
+              <BotMessageSquare />
+              詢問AI教練
+            </Button>
+          )}
+
+          {isChatWithAI && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setHasCarryData((prev) => !prev)}
+            >
+              <Check
+                strokeWidth={5}
+                className={hasCarryData ? `text-green-500` : "text-gray-300"}
+              />
+              帶入以上區間資料
+            </Button>
+          )}
+        </div>
+        {isChatWithAI && (
+          <>
+            <p className="text-sm italic text-red-400">
+              與AI的對話內容將不會儲存，請自行保留相關資料。
+            </p>
+            <ChatBox messages={messages}>
+              <ChatInput onSend={handleSend} isReplyLoading={isReplyLoading} />
+            </ChatBox>
+          </>
+        )}
       </CardContent>
+      <AlertMessageDialog
+        isOpen={isAlertMessageDialogOpen}
+        setIsOpen={setIsAlertMessageDialogOpen}
+        setIsChatWithAI={setIsChatWithAI}
+      />
     </Card>
   );
 }

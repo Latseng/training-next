@@ -1,8 +1,8 @@
 export interface Exercise {
-  name: string; // 訓練動作名稱 (例如：深蹲、臥推)
-  weight: number; // 強度（重量）
-  sets: number; // 組數
-  reps: number; // 次數
+  name: string;
+  weight: number;
+  sets: number;
+  reps: number;
 }
 
 export interface TrainingSession {
@@ -33,3 +33,17 @@ export interface ActivityRecord {
   weight: number;
   repetition: number;
 }
+
+export interface Message {
+  id: string;
+  content: string;
+  isLoading?: boolean;
+  role: "user" | "model";
+}
+
+export type ChatStore = {
+  messages: Message[];
+  addMessage: (message: Message) => void;
+  updateLoadingMessage: (loadingId: string, newContent: string) => void;
+  reset: () => void;
+};

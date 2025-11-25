@@ -2,6 +2,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@100..900&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
+@plugin '@tailwindcss/typography';
 
 @theme{
   --font-noto-sans-tc: "Noto Sans TC", sans-serif;
