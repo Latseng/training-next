@@ -30,9 +30,9 @@ interface TainingVolumeDialogProps {
 }
 
 const formSchema = z.object({
-  set: z.number().min(1).max(20),
-  weight: z.number().min(1).max(1000),
-  repetition: z.number().min(1).max(100),
+  set: z.number().int().min(1).max(20),
+  weight: z.number().min(0).max(1000), // 0 代表自體體重
+  repetition: z.number().int().min(1).max(100),
 });
 
 const TrainingRecordDialog = ({
@@ -111,7 +111,9 @@ const TrainingRecordDialog = ({
                     id="weight"
                     aria-invalid={fieldState.invalid}
                     type="number"
-                    min={1}
+                    min={0}
+                    // 允許小數點
+                    step="any"
                     required
                     onChange={(e) => field.onChange(e.target.valueAsNumber)}
                   />
